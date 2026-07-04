@@ -17,12 +17,15 @@ export const loader = async ({ request }) => {
   const supabase = getSupabase();
   const url = new URL(request.url);
   const page = Math.max(1, Number(url.searchParams.get("page") || 1));
+  const shapeFilter = url.searchParams.get("shape") || "";
   const from = (page - 1) * PAGE_SIZE;
 
-  const { data, count } = await supabase
+  let query = supabase
     .from("diamond_prices")
     .select("id, shape, origin, carat, colour, clarity, price_pence", { count: "exact" })
-    .eq("shop", session.shop)
+    .eq("shop", session.shop);
+  if (shapeFilter) query = query.eq("shape", shapeFilter);
+  const { data, count } = await query
     .order("shape").order("origin").order("carat").order("colour").order("clarity")
     .range(from, from + PAGE_SIZE - 1);
 
@@ -37,7 +40,7 @@ export const loader = async ({ request }) => {
   const uniq = (k) => [...new Set((vals || []).map((v) => v[k]))].filter(Boolean).sort();
 
   return {
-    rows, total: count || 0, page,
+    rows, total: count || 0, page, shapeFilter,
     suggest: { shapes: uniq("shape"), colours: uniq("colour"), clarities: uniq("clarity") },
   };
 };
@@ -150,7 +153,7 @@ export const action = async ({ request }) => {
 };
 
 export default function PriceData() {
-  const { rows, total, page, suggest } = useLoaderData();
+  const { rows, total, page, shapeFilter, suggest } = useLoaderData();
   const uploader = useFetcher();
   const adder = useFetcher();
   const fileRef = useRef(null);
@@ -169,6 +172,7 @@ export default function PriceData() {
 
   function upload(f) { if (!f) return; const fd = new FormData(); fd.append("csv", f); uploader.submit(fd, { method: "post", encType: "multipart/form-data" }); }
   function goto(p) { setParams((prev) => { prev.set("page", String(p)); return prev; }); }
+  function filterShape(v) { setParams((prev) => { if (v) prev.set("shape", v); else prev.delete("shape"); prev.delete("page"); return prev; }); }
 
   return (
     <div>
@@ -207,7 +211,13 @@ export default function PriceData() {
                 <h3 style={{ margin: 0 }}>Prices — {total} loaded</h3>
                 <p className="desc" style={{ margin: "4px 0 0" }}>Edit a price inline, delete a row, or add a new one.</p>
               </div>
-              <button className="btn" onClick={() => { setEditRow(null); setModal(true); }}>+ Add price</button>
+              <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+                <select className="ds-field" style={{ width: 160, marginTop: 0 }} value={shapeFilter} onChange={(e) => filterShape(e.target.value)}>
+                  <option value="">All shapes</option>
+                  {suggest.shapes.map((sh) => <option key={sh} value={sh}>{sh}</option>)}
+                </select>
+                <button className="btn" onClick={() => { setEditRow(null); setModal(true); }}>+ Add price</button>
+              </div>
             </div>
 
             {rows.length === 0 ? (
