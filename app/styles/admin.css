@@ -1,0 +1,135 @@
+/* Avita Diamond Selector — admin content styling (scoped to .ds-admin).
+   Page switching is handled by Shopify's native app nav; this styles the
+   content inside each page to match the approved design. */
+.ds-admin{
+  --ink:#171614; --graphite:#54514b; --mist:#8f8b82; --line:#e6e2d9;
+  --paper:#f7f5f0; --card:#ffffff; --gold:#9a7b4f; --gold-soft:#f4eee3;
+  --ok:#3f7d5a; --ok-soft:#eaf3ee; --warn:#b0603a; --warn-soft:#f9ece4;
+  --shadow:0 1px 2px rgba(0,0,0,.04),0 10px 34px rgba(23,22,20,.06);
+  --serif:Georgia,'Times New Roman',serif;
+  --mono:ui-monospace,'SF Mono',Menlo,Consolas,monospace;
+  color:var(--ink); line-height:1.5; -webkit-font-smoothing:antialiased;
+  max-width:940px;
+}
+.ds-admin *{box-sizing:border-box}
+
+.ds-admin .page-head{margin-bottom:22px}
+.ds-admin .page-head h2{font-family:var(--serif);font-size:26px;font-weight:500;margin:0}
+.ds-admin .page-head p{font-size:13px;color:var(--mist);margin-top:5px}
+
+.ds-admin .card{background:var(--card);border:1px solid var(--line);border-radius:6px;
+  box-shadow:var(--shadow);padding:24px;margin-bottom:20px}
+.ds-admin .card h3{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--graphite);
+  font-weight:600;margin:0 0 4px}
+.ds-admin .card .desc{font-size:12.5px;color:var(--mist);margin-bottom:18px}
+
+/* dropzone */
+.ds-admin .drop{border:1.5px dashed #d8d2c5;border-radius:6px;padding:34px;text-align:center;
+  background:var(--gold-soft);cursor:pointer;transition:.18s}
+.ds-admin .drop:hover{border-color:var(--gold);background:#f0e7d6}
+.ds-admin .drop .ic{font-size:26px;color:var(--gold)}
+.ds-admin .drop b{display:block;font-size:14px;margin-top:8px;color:var(--ink);font-weight:600}
+.ds-admin .drop small{color:var(--mist);font-size:12px}
+.ds-admin .drop.done{background:var(--ok-soft);border-color:var(--ok);border-style:solid}
+.ds-admin .drop.done .ic,.ds-admin .drop.done b{color:var(--ok)}
+.ds-admin .drop.err{background:var(--warn-soft);border-color:var(--warn);border-style:solid}
+.ds-admin .drop.err .ic,.ds-admin .drop.err b{color:var(--warn)}
+
+/* validation checklist */
+.ds-admin .valid{margin-top:16px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.ds-admin .valid .row{display:flex;align-items:center;gap:10px;padding:10px 14px;font-size:13px;
+  border-bottom:1px solid var(--line)}
+.ds-admin .valid .row:last-child{border-bottom:none}
+.ds-admin .valid .tick{width:16px;height:16px;border-radius:50%;flex:none;display:flex;
+  align-items:center;justify-content:center;font-size:10px;color:#fff}
+.ds-admin .tick.g{background:var(--ok)} .ds-admin .tick.r{background:var(--warn)}
+.ds-admin .valid .k{color:var(--graphite)} .ds-admin .valid .v{margin-left:auto;font-family:var(--mono);color:var(--ink)}
+
+/* preview table */
+.ds-admin .tablewrap{margin-top:16px;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.ds-admin table{width:100%;border-collapse:collapse;font-size:12.5px}
+.ds-admin thead th{background:#faf8f3;text-align:left;padding:9px 12px;font-size:10px;letter-spacing:.1em;
+  text-transform:uppercase;color:var(--mist);font-weight:600;border-bottom:1px solid var(--line)}
+.ds-admin tbody td{padding:8px 12px;border-bottom:1px solid #f1ede4;font-variant-numeric:tabular-nums}
+.ds-admin tbody tr:last-child td{border-bottom:none}
+.ds-admin tbody tr:hover{background:#faf8f3}
+.ds-admin .pill{display:inline-block;font-size:10px;padding:2px 8px;border-radius:20px;letter-spacing:.04em}
+.ds-admin .pill.lab{background:#eef2f6;color:#496b82}
+.ds-admin .pill.natural{background:var(--gold-soft);color:var(--gold)}
+.ds-admin .tblfoot{padding:10px 14px;font-size:12px;color:var(--mist);background:#faf8f3;
+  display:flex;justify-content:space-between;align-items:center}
+
+/* base price rows */
+.ds-admin .metal-row{display:grid;grid-template-columns:1fr 150px 150px;gap:12px;align-items:center;
+  padding:12px 0;border-bottom:1px solid #f1ede4}
+.ds-admin .metal-row:last-of-type{border-bottom:none}
+.ds-admin .metal-row .name{font-size:14px}
+.ds-admin .metal-row .name small{display:block;color:var(--mist);font-size:11.5px}
+.ds-admin .money{position:relative}
+.ds-admin .money > span{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--mist);font-size:13px}
+.ds-admin input[type=text],.ds-admin input[type=number]{font-family:inherit;font-size:13px;
+  padding:9px 11px 9px 22px;border:1px solid var(--line);border-radius:5px;width:100%;color:var(--ink);background:#fff}
+.ds-admin input:focus{outline:none;border-color:var(--gold)}
+.ds-admin .field-label{font-weight:600;font-size:12.5px;margin-bottom:5px;display:block}
+.ds-admin .metal-row .status{font-size:11px;color:var(--ok);text-align:right}
+.ds-admin .metal-row .status.off{color:var(--mist)}
+.ds-admin .toggle{width:38px;height:22px;border-radius:20px;background:#d8d2c5;position:relative;
+  cursor:pointer;transition:.18s;flex:none;border:none;padding:0}
+.ds-admin .toggle.on{background:var(--ok)}
+.ds-admin .toggle::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;
+  border-radius:50%;background:#fff;transition:.18s}
+.ds-admin .toggle.on::after{left:18px}
+
+.ds-admin .addbtn{margin-top:14px;font-size:12.5px;color:var(--gold);background:none;border:1px dashed #d8d2c5;
+  padding:9px 14px;border-radius:5px;cursor:pointer;width:100%;transition:.15s}
+.ds-admin .addbtn:hover{border-color:var(--gold);background:var(--gold-soft)}
+
+/* settings rows */
+.ds-admin .cfg-row{display:flex;align-items:flex-start;gap:14px;padding:15px 0;border-bottom:1px solid #f1ede4}
+.ds-admin .cfg-row:last-child{border-bottom:none}
+.ds-admin .cfg-row .txt{flex:1}
+.ds-admin .cfg-row .txt b{font-size:13.5px;font-weight:600}
+.ds-admin .cfg-row .txt p{font-size:12px;color:var(--mist);margin-top:2px}
+.ds-admin .chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ds-admin .mini{font-size:11.5px;padding:4px 10px;border:1px solid var(--line);border-radius:20px;
+  background:#fff;color:var(--graphite);cursor:pointer;user-select:none}
+.ds-admin .mini.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.ds-admin .mini.readonly{cursor:default;opacity:.9}
+
+/* buttons / savebar */
+.ds-admin .savebar{display:flex;gap:12px;align-items:center;margin-top:6px}
+.ds-admin .btn{font-family:inherit;font-size:12px;letter-spacing:.14em;text-transform:uppercase;
+  font-weight:600;padding:13px 26px;background:var(--ink);color:#fff;border:none;border-radius:5px;cursor:pointer;transition:.18s}
+.ds-admin .btn:hover:not(:disabled){background:var(--gold)}
+.ds-admin .btn:disabled{background:#cfcac0;cursor:not-allowed}
+.ds-admin .btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
+.ds-admin .btn.ghost:hover{border-color:var(--gold);color:var(--gold);background:#fff}
+.ds-admin .flash{font-size:12.5px;padding:10px 14px;border-radius:5px;margin-top:14px}
+.ds-admin .flash.ok{background:var(--ok-soft);color:var(--ok)}
+.ds-admin .flash.err{background:var(--warn-soft);color:var(--warn)}
+.ds-admin .flash pre{font-family:var(--mono);font-size:11.5px;white-space:pre-wrap;margin-top:6px}
+.ds-admin .picked{margin-top:10px;padding:10px 14px;border:1px solid var(--line);border-radius:6px;
+  background:var(--gold-soft);font-size:13px}
+.ds-admin .muted{color:var(--mist);font-size:12.5px}
+.ds-admin .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* image library modal */
+.ds-modal-backdrop{position:fixed;inset:0;background:rgba(23,22,20,.5);z-index:1000;
+  display:flex;align-items:center;justify-content:center;padding:24px}
+.ds-modal{background:#fff;border-radius:10px;max-width:840px;width:100%;max-height:86vh;
+  display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden}
+.ds-modal-head{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;
+  border-bottom:1px solid var(--line)}
+.ds-modal-head h4{font-family:var(--serif);font-size:18px;margin:0}
+.ds-modal-x{background:none;border:none;font-size:22px;cursor:pointer;color:var(--mist);line-height:1;padding:0 6px}
+.ds-modal-tools{padding:14px 20px;border-bottom:1px solid var(--line);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.ds-modal-search{flex:1;min-width:180px;padding:9px 12px;border:1px solid var(--line);border-radius:6px;font-size:13px}
+.ds-modal-body{padding:18px 20px;overflow:auto}
+.ds-modal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:10px}
+.ds-modal-grid figure{margin:0;cursor:pointer;border:1px solid var(--line);border-radius:8px;overflow:hidden;transition:.12s;background:#fff}
+.ds-modal-grid figure:hover{border-color:var(--gold);box-shadow:0 4px 14px rgba(0,0,0,.08)}
+.ds-modal-grid img{width:100%;aspect-ratio:1;object-fit:cover;display:block}
+.ds-modal-grid figcaption{font-size:10.5px;color:var(--mist);padding:5px 6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+@media(max-width:760px){
+  .ds-admin .metal-row{grid-template-columns:1fr 1fr;gap:8px}
+  .ds-admin .grid2{grid-template-columns:1fr}
+}

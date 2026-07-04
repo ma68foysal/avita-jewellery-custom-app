@@ -1,0 +1,24 @@
+<script>
+  window.AvitaDiamondSelector = Object.assign(window.AvitaDiamondSelector || {}, {
+    show: {{ block.settings.show_selector | json }}
+  });
+</script>
+
+{% schema %}
+{
+  "name": "Diamond Selector Switch",
+  "target": "body",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Global switch for the diamond selector. The selector is added as a block on your ring product templates — use this to show or hide it across the whole store without removing the block from each page."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_selector",
+      "label": "Show diamond selector",
+      "default": true
+    }
+  ]
+}
+{% endschema %}

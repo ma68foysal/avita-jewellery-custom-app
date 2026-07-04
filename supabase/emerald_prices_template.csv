@@ -1,0 +1,12 @@
+shape,origin,carat,colour,clarity,price,image_url
+emerald,lab,1.00,D,VVS1,720,
+emerald,lab,1.00,E,VVS2,690,
+emerald,lab,1.00,F,VS1,650,
+emerald,lab,2.00,D,VVS1,1850,
+emerald,lab,2.00,E,VVS2,1700,
+emerald,lab,4.00,D,VVS1,4060,
+emerald,natural,1.00,D,VVS1,6200,
+emerald,natural,1.00,E,VVS2,5400,
+emerald,natural,1.00,F,VS1,4550,
+emerald,natural,2.00,D,VVS1,24000,
+emerald,natural,4.00,D,VVS1,101500,

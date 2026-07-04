@@ -1,0 +1,383 @@
+/* Avita Diamond Selector — storefront styles (namespaced under .avita-ds) */
+.avita-ds {
+  --ds-ink: #1a1a1a;
+  --ds-graphite: #4a4a44;
+  --ds-mist: #8a8a80;
+  --ds-line: #e4e0d8;
+  --ds-card: #ffffff;
+  --ds-gold: #9a7b4f;
+  --ds-gold-soft: #f3ede2;
+  --ds-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 30px rgba(26, 26, 26, 0.06);
+  --ds-serif: Georgia, "Times New Roman", serif;
+  --ds-sans:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+  font-family: var(--ds-sans);
+  color: var(--ds-ink);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+.avita-ds * {
+  box-sizing: border-box;
+}
+.avita-ds__stage {
+  /* max-width: 1120px; */
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: start;
+  background: var(--ds-card);
+  border: 1px solid var(--ds-line);
+  box-shadow: var(--ds-shadow);
+  border-radius: 2px;
+  overflow: hidden;
+}
+.avita-ds__visual {
+  background: #fff;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  justify-content: flex-start;
+  align-items: stretch;
+  min-width: 0;
+}
+.avita-ds__main {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1/1;
+  border: 1px solid var(--ds-line);
+  border-radius: 3px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #f6f2ea 0%, #eae3d6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.avita-ds__badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  font-size: 10px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ds-gold);
+  background: #fff;
+  padding: 5px 10px;
+  border-radius: 2px;
+  border: 1px solid var(--ds-line);
+  z-index: 2;
+}
+.avita-ds__zoom {
+  position: absolute;
+  bottom: 14px;
+  right: 14px;
+  font-size: 10px;
+  color: var(--ds-mist);
+  background: #fff;
+  padding: 4px 9px;
+  border-radius: 2px;
+  border: 1px solid var(--ds-line);
+  z-index: 2;
+}
+.avita-ds__photo {
+  max-width: 68%;
+  max-height: 68%;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  transition: opacity 0.3s ease;
+}
+.avita-ds__photo.is-swapping {
+  opacity: 0;
+}
+.avita-ds__main svg {
+  max-width: 62%;
+  max-height: 62%;
+  width: auto;
+  height: auto;
+}
+.avita-ds__thumbs {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-bottom: 6px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  cursor: grab;
+}
+.avita-ds__thumbs::-webkit-scrollbar {
+  display: none;
+}
+.avita-ds__thumbs.is-dragging {
+  cursor: grabbing;
+  scroll-snap-type: none;
+}
+.avita-ds__thumbs.is-dragging .avita-ds__thumb {
+  pointer-events: none;
+}
+.avita-ds__thumb {
+  position: relative;
+  flex: 0 0 auto;
+  width: 76px;
+  height: 76px;
+  scroll-snap-align: start;
+  border: 1px solid var(--ds-line);
+  border-radius: 4px;
+  overflow: hidden;
+  cursor: pointer;
+  background: linear-gradient(160deg, #f6f2ea, #ece5d8);
+  transition: border-color 0.18s;
+}
+.avita-ds__thumb:hover {
+  border-color: var(--ds-gold);
+}
+.avita-ds__thumb.is-active {
+  border-color: var(--ds-ink);
+  box-shadow: inset 0 0 0 1px var(--ds-ink);
+}
+.avita-ds__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.avita-ds__thumb span {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  font-size: 9px;
+  letter-spacing: 0.05em;
+  text-align: center;
+  color: #fff;
+  background: rgba(23, 22, 20, 0.5);
+  padding: 2px 0;
+  text-transform: uppercase;
+}
+.avita-ds__facet-note {
+  text-align: center;
+  font-family: var(--ds-serif);
+  font-size: 16px;
+  font-style: italic;
+  color: var(--ds-graphite);
+  margin-top: 4px;
+}
+.avita-ds__facet-note span {
+  display: block;
+  font-family: var(--ds-sans);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ds-mist);
+  margin-top: 5px;
+}
+.avita-ds__selector {
+  padding: 52px 48px;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.avita-ds__title {
+  font-family: var(--ds-serif);
+  font-weight: 500;
+  font-size: 38px;
+  line-height: 1.05;
+  margin: 0;
+}
+.avita-ds__subtitle {
+  font-size: 13px;
+  color: var(--ds-mist);
+  margin: 8px 0 0;
+}
+.avita-ds__rule {
+  height: 1px;
+  background: var(--ds-line);
+  margin: 28px 0;
+}
+.avita-ds__step {
+  margin-bottom: 26px;
+  opacity: 1;
+  transition: opacity 0.3s;
+}
+.avita-ds__step.is-locked {
+  opacity: 0.3;
+  pointer-events: none;
+}
+.avita-ds__step-label {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 11px;
+}
+.avita-ds__num {
+  font-family: var(--ds-serif);
+  font-size: 15px;
+  color: var(--ds-gold);
+  font-weight: 600;
+}
+.avita-ds__name {
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--ds-graphite);
+  font-weight: 600;
+}
+.avita-ds__hint {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--ds-mist);
+  font-style: italic;
+  font-family: var(--ds-serif);
+}
+.avita-ds__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.avita-ds__chip {
+  font-family: var(--ds-sans);
+  font-size: 13px;
+  padding: 9px 16px;
+  border: 1px solid var(--ds-line);
+  background: #fff;
+  color: var(--ds-ink);
+  cursor: pointer;
+  border-radius: 1px;
+  transition: all 0.18s ease;
+  min-width: 96px;
+  text-align: center;
+}
+.avita-ds__chip:hover {
+  border-color: var(--ds-gold);
+  color: var(--ds-gold);
+}
+.avita-ds__chip.is-active {
+  background: var(--ds-ink);
+  border-color: var(--ds-ink);
+  color: #fff;
+}
+.avita-ds__select {
+  width: 100%;
+  font-family: var(--ds-sans);
+  font-size: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--ds-line);
+  background: #fff;
+  appearance: none;
+  border-radius: 1px;
+  color: var(--ds-ink);
+  cursor: pointer;
+}
+.avita-ds__select:focus {
+  outline: none;
+  border-color: var(--ds-gold);
+}
+.avita-ds__summary {
+  margin-top: auto;
+  background: var(--ds-gold-soft);
+  border: 1px solid #eae1d0;
+  padding: 22px 24px;
+  border-radius: 2px;
+}
+.avita-ds__price-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  color: var(--ds-graphite);
+  padding: 5px 0;
+}
+.avita-ds__price-line.avita-ds__total {
+  border-top: 1px solid #e0d4bd;
+  margin-top: 10px;
+  padding-top: 14px;
+}
+.avita-ds__total .avita-ds__k {
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.avita-ds__v {
+  font-variant-numeric: tabular-nums;
+}
+.avita-ds__total .avita-ds__v {
+  font-family: var(--ds-serif);
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--ds-ink);
+}
+.avita-ds__pending {
+  color: var(--ds-mist);
+  font-style: italic;
+  font-family: var(--ds-serif);
+  font-size: 16px;
+}
+.avita-ds__cta {
+  margin-top: 16px;
+  width: 100%;
+  font-family: var(--ds-sans);
+  font-size: 12px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  font-weight: 600;
+  padding: 16px;
+  background: var(--ds-ink);
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s;
+  border-radius: 1px;
+}
+.avita-ds__cta:hover:not(:disabled) {
+  background: var(--ds-gold);
+}
+.avita-ds__cta:disabled {
+  background: #cfcac0;
+  cursor: not-allowed;
+}
+.avita-ds__msg {
+  margin-top: 12px;
+  font-size: 12px;
+  padding: 10px 12px;
+  border-radius: 2px;
+}
+.avita-ds__msg.is-error {
+  background: #fbeaea;
+  color: #8a2b2b;
+}
+.avita-ds__msg.is-ok {
+  background: #eaf5ec;
+  color: #256b39;
+}
+.avita-ds__props {
+  margin-top: 14px;
+  font-size: 11px;
+  color: var(--ds-mist);
+  line-height: 1.7;
+}
+.avita-ds__props strong {
+  color: var(--ds-graphite);
+  font-weight: 600;
+}
+.avita-ds__none {
+  font-style: italic;
+}
+@media (max-width: 820px) {
+  .avita-ds__stage {
+    grid-template-columns: 1fr;
+  }
+  .avita-ds__visual {
+    min-height: auto;
+    padding: 40px;
+  }
+  .avita-ds__selector {
+    padding: 40px 32px;
+  }
+  .avita-ds__title {
+    font-size: 32px;
+  }
+}
