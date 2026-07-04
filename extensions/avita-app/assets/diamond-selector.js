@@ -163,23 +163,30 @@
         "&carat=" + encodeURIComponent(state.carat) +
         "&colour=" + encodeURIComponent(state.colour) +
         "&clarity=" + encodeURIComponent(state.clarity);
-      el.cta.disabled = true;
+      // Enable Add to cart instantly — the server re-prices on add, so we don't
+      // need to wait for the live total to come back.
+      el.cta.disabled = false;
+      el.cta.textContent = "Add to cart";
+      el.stone.innerHTML = '<span class="avita-ds__pending">Calculating…</span>';
+      el.facet.textContent = state.carat + "ct · " + state.colour + " · " + state.clarity +
+        " · " + (state.origin === "natural" ? "Natural" : "Lab");
+      el.props.innerHTML = "<strong>Your specification</strong><br>" +
+        (state.origin === "natural" ? "Natural" : "Lab grown") + " " + shape + " cut · " +
+        state.carat + " carat · colour " + state.colour + " · clarity " + state.clarity +
+        "<br>Ring size " + (state.size || "—");
+
+      var reqCarat = state.carat, reqColour = state.colour, reqClarity = state.clarity, reqOrigin = state.origin;
       fetch(url, { headers: { Accept: "application/json" } })
-        .then(function (r) { return r.json(); })
+        .then(function (r) { if (!r.ok) throw new Error("server"); return r.json(); })
         .then(function (data) {
-          if (!data.ok) { showMsg(data.reason || "Price unavailable for this combination.", "error"); return; }
+          // Ignore stale responses if the shopper changed selection meanwhile.
+          if (reqCarat !== state.carat || reqColour !== state.colour || reqClarity !== state.clarity || reqOrigin !== state.origin) return;
+          if (!data.ok) { el.cta.disabled = true; showMsg(data.reason || "Price unavailable for this combination.", "error"); return; }
           clearMsg();
           el.base.textContent = data.baseFormatted;
           el.stone.textContent = data.stoneFormatted;
           el.total.textContent = data.totalFormatted;
-          el.facet.textContent = state.carat + "ct · " + state.colour + " · " + state.clarity +
-            " · " + (state.origin === "natural" ? "Natural" : "Lab");
-          el.cta.disabled = false;
           el.cta.textContent = "Add to cart · " + data.totalFormatted;
-          el.props.innerHTML = "<strong>Your specification</strong><br>" +
-            (state.origin === "natural" ? "Natural" : "Lab grown") + " " + shape + " cut · " +
-            state.carat + " carat · colour " + state.colour + " · clarity " + state.clarity +
-            "<br>Ring size " + (state.size || "—");
         })
         .catch(function () { showMsg("Could not reach pricing. Please retry.", "error"); });
     }
@@ -315,7 +322,11 @@
           clarity: state.clarity, size: state.size,
         }),
       })
-        .then(function (r) { return r.json(); })
+        .then(function (r) {
+          // Guard against non-JSON error pages (e.g. a 500) so we never blow up on JSON.parse.
+          if (!r.ok) throw new Error("server");
+          return r.json();
+        })
         .then(function (data) {
           if (!data.ok) throw new Error(data.reason || "cart_failed");
           return fetch("/cart/add.js", {
@@ -328,8 +339,8 @@
           if (!r.ok) return r.json().then(function (e) { throw new Error(e.description || "add_failed"); });
           window.location.href = "/cart";
         })
-        .catch(function (err) {
-          showMsg("Sorry, we couldn't add this to your cart. " + (err.message || ""), "error");
+        .catch(function () {
+          showMsg("Sorry, we couldn't add this to your cart. Please try again in a moment.", "error");
           el.cta.disabled = false; el.cta.textContent = original;
         });
     });
@@ -364,11 +375,12 @@
           var origins = [];
           if ((combos.natural || []).length) origins.push("natural");
           if ((combos.lab || []).length) origins.push("lab");
-          if (!origins.length) { showMsg("No diamond prices are loaded yet.", "error"); return; }
+          if (!origins.length) { root.classList.remove("is-loading"); showMsg("No diamond prices are loaded yet.", "error"); return; }
           makeChips(el.origin, origins, function (o) { return o === "natural" ? "Natural" : "Lab Grown"; }, pickOrigin);
           renderThumbs(state.origin); // build thumbnails now that combos + images are loaded
+          root.classList.remove("is-loading"); // reveal the ready selector
         })
-        .catch(function () { showMsg("Could not load diamond options.", "error"); });
+        .catch(function () { root.classList.remove("is-loading"); showMsg("Could not load diamond options.", "error"); });
     }
 
     // Drag-to-scroll the thumbnail slider (desktop); touch swipe is native.

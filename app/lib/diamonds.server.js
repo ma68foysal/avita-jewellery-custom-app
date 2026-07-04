@@ -308,20 +308,35 @@ export async function mintVariant(shop, admin, productGid, q) {
     return cached.variant_id;
   }
 
-  // 2) Discover the product's first option name (values must be unique per variant).
+  // 2) Get EVERY option the product has (Metal, etc.) plus the base variant's
+  //    values, so the new variant supplies a value for all options — not just
+  //    the first. The diamond combo is appended to the first option to stay unique.
   const optResp = await admin.graphql(
     `#graphql
     query ProductOptions($id: ID!) {
-      product(id: $id) { options(first: 1) { name } }
+      product(id: $id) {
+        options { name }
+        variants(first: 1) { nodes { selectedOptions { name value } } }
+      }
     }`,
     { variables: { id: productGid } },
   );
   const optJson = await optResp.json();
-  const optionName =
-    optJson?.data?.product?.options?.[0]?.name || "Title";
+  const options = optJson?.data?.product?.options || [];
+  const baseSel = optJson?.data?.product?.variants?.nodes?.[0]?.selectedOptions || [];
+  const baseValues = {};
+  baseSel.forEach((o) => { baseValues[o.name] = o.value; });
 
-  // Unique, human-readable option value for this configuration.
-  const optionValue = `${q.origin}/${q.carat}/${q.colour}/${q.clarity}`;
+  const combo = `${q.origin}/${q.carat}/${q.colour}/${q.clarity}`;
+  const optionNames = options.length ? options.map((o) => o.name) : ["Title"];
+  // First option carries the unique combo (prefixed with its base value if any);
+  // all other options reuse the base variant's value so none are left empty.
+  const optionValues = optionNames.map((name, i) => ({
+    optionName: name,
+    name: i === 0
+      ? `${baseValues[name] ? baseValues[name] + " · " : ""}${combo}`
+      : (baseValues[name] || "Default"),
+  }));
 
   // 3) Create the variant priced at the full total.
   const createResp = await admin.graphql(
@@ -338,7 +353,7 @@ export async function mintVariant(shop, admin, productGid, q) {
         variants: [
           {
             price: penceToPoundsString(q.totalPence),
-            optionValues: [{ optionName, name: optionValue }],
+            optionValues,
             inventoryPolicy: "CONTINUE", // made-to-order: allow purchase always
             inventoryItem: { tracked: false },
           },

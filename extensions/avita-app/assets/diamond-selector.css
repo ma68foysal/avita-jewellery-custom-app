@@ -1,4 +1,9 @@
 /* Avita Diamond Selector — storefront styles (namespaced under .avita-ds) */
+.avita-ds__stage{position:relative}
+.avita-ds__loader{position:absolute;inset:0;background:#fff;display:flex;align-items:center;justify-content:center;z-index:20;transition:opacity .35s ease}
+.avita-ds:not(.is-loading) .avita-ds__loader{opacity:0;pointer-events:none}
+.avita-ds__spinner{width:34px;height:34px;border:3px solid #e4e0d8;border-top-color:#9a7b4f;border-radius:50%;animation:avita-ds-spin .8s linear infinite}
+@keyframes avita-ds-spin{to{transform:rotate(360deg)}}
 .avita-ds {
   --ds-ink: #1a1a1a;
   --ds-graphite: #4a4a44;
