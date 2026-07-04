@@ -112,6 +112,17 @@
   background:var(--gold-soft);font-size:13px}
 .ds-admin .muted{color:var(--mist);font-size:12.5px}
 .ds-admin .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+/* tabs */
+.ds-tabs{display:inline-flex;gap:4px;background:#f1ede4;padding:4px;border-radius:9px;margin-bottom:20px}
+.ds-tab{padding:8px 18px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;border:none;
+  background:transparent;color:var(--graphite);transition:.15s}
+.ds-tab.is-active{background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.08);color:var(--ink)}
+.ds-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.ds-form-grid label{display:block}
+.ds-form-grid .full{grid-column:1 / -1}
+.ds-field{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:6px;font-size:13px;background:#fff;margin-top:4px}
+.ds-field:focus{outline:none;border-color:var(--gold)}
+
 /* image library modal */
 .ds-modal-backdrop{position:fixed;inset:0;background:rgba(23,22,20,.5);z-index:1000;
   display:flex;align-items:center;justify-content:center;padding:24px}

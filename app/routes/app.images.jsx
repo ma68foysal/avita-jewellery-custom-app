@@ -8,11 +8,14 @@ export const loader = async ({ request }) => {
   const { session } = await authenticate.admin(request);
   const url = new URL(request.url);
   const shape = url.searchParams.get("shape") || "emerald";
-  const [carats, images] = await Promise.all([
+  const page = Math.max(1, Number(url.searchParams.get("page") || 1));
+  const PAGE = 20;
+  const [allCarats, images] = await Promise.all([
     getCaratsForShape(session.shop, shape),
     getCaratImages(session.shop, shape),
   ]);
-  return { shape, carats, images };
+  const carats = allCarats.slice((page - 1) * PAGE, page * PAGE);
+  return { shape, carats, images, page, totalCarats: allCarats.length, pageSize: PAGE };
 };
 
 export const action = async ({ request }) => {
@@ -57,8 +60,10 @@ export const action = async ({ request }) => {
 };
 
 export default function Images() {
-  const { shape, carats, images } = useLoaderData();
+  const { shape, carats, images, page, totalCarats, pageSize } = useLoaderData();
   const [, setParams] = useSearchParams();
+  const totalPages = Math.max(1, Math.ceil((totalCarats || 0) / (pageSize || 20)));
+  const gotoPage = (p) => setParams((prev) => { prev.set("page", String(p)); return prev; });
   const shopify = useAppBridge();
   const saver = useFetcher();
   const resolver = useFetcher();
@@ -128,26 +133,37 @@ export default function Images() {
       </div>
 
       <div className="card">
-        <h3>Image per carat — {shape}</h3>
+        <h3>Image per carat — {shape} ({totalCarats || 0})</h3>
         {carats.length === 0 ? (
           <p className="muted">No carats loaded for this shape. Upload prices first.</p>
         ) : (
-          carats.map((c) => (
-            <div key={c} className="metal-row" style={{ gridTemplateColumns: "70px 1fr auto" }}>
-              <div className="name"><b>{parseFloat(c).toFixed(2)}ct</b></div>
-              <input type="text" value={map[c] || ""} placeholder="Image URL (or choose from Shopify)" style={inp} onChange={(e) => setUrl(c, e.target.value)} />
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                {map[c] ? <img src={map[c]} alt="" style={thumb} /> : <span className="muted">—</span>}
-                <button type="button" className="btn ghost" style={{ padding: "8px 12px", letterSpacing: 0, textTransform: "none" }}
-                  {...(resolver.state !== "idle" ? { disabled: true } : {})}
-                  onClick={() => pickImage(c)}>Choose image</button>
-                {map[c] && (
+          <>
+            {carats.map((c) => (
+              <div key={c} className="metal-row" style={{ gridTemplateColumns: "70px 1fr auto" }}>
+                <div className="name"><b>{parseFloat(c).toFixed(2)}ct</b></div>
+                <input type="text" value={map[c] || ""} placeholder="Image URL (or choose from Shopify)" style={inp} onChange={(e) => setUrl(c, e.target.value)} />
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {map[c] ? <img src={map[c]} alt="" style={thumb} /> : <span className="muted">—</span>}
                   <button type="button" className="btn ghost" style={{ padding: "8px 12px", letterSpacing: 0, textTransform: "none" }}
-                    onClick={() => setUrl(c, "")}>Clear</button>
-                )}
+                    {...(resolver.state !== "idle" ? { disabled: true } : {})}
+                    onClick={() => pickImage(c)}>Choose image</button>
+                  {map[c] && (
+                    <button type="button" className="btn ghost" style={{ padding: "8px 12px", letterSpacing: 0, textTransform: "none" }}
+                      onClick={() => setUrl(c, "")}>Clear</button>
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+            {totalPages > 1 && (
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 14, fontSize: 13, color: "var(--ds-mist)" }}>
+                <span>Page {page} of {totalPages}</span>
+                <span style={{ display: "flex", gap: 8 }}>
+                  <button className="btn ghost" style={{ padding: "5px 12px", letterSpacing: 0, textTransform: "none" }} disabled={page <= 1} onClick={() => gotoPage(page - 1)}>← Prev</button>
+                  <button className="btn ghost" style={{ padding: "5px 12px", letterSpacing: 0, textTransform: "none" }} disabled={page >= totalPages} onClick={() => gotoPage(page + 1)}>Next →</button>
+                </span>
+              </div>
+            )}
+          </>
         )}
       </div>
 
