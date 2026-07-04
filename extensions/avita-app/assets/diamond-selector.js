@@ -151,11 +151,11 @@
     function refreshPrice() {
       var ready = state.origin && state.carat && state.colour && state.clarity;
       if (!ready) {
-        el.stone.innerHTML = '<span class="avita-ds__pending">Pending selection</span>';
-        el.facet.textContent = "Select to preview specification";
+        if (el.stone) el.stone.innerHTML = '<span class="avita-ds__pending">Pending selection</span>';
+        if (el.facet) el.facet.textContent = "Select to preview specification";
         el.cta.disabled = true;
         el.cta.textContent = root.querySelector("[data-ds-cta]").getAttribute("data-default") || el.cta.textContent;
-        el.props.innerHTML = "<strong>Your specification</strong><br><span class='avita-ds__none'>Continue selecting above.</span>";
+        if (el.props) el.props.innerHTML = "<strong>Your specification</strong><br><span class='avita-ds__none'>Continue selecting above.</span>";
         return;
       }
       var url = proxyBase + "/price?productId=" + encodeURIComponent(productGid) +
@@ -168,10 +168,10 @@
       // need to wait for the live total to come back.
       el.cta.disabled = false;
       el.cta.textContent = "Add to cart";
-      el.stone.innerHTML = '<span class="avita-ds__pending">Calculating…</span>';
-      el.facet.textContent = state.carat + "ct · " + state.colour + " · " + state.clarity +
+      if (el.stone) el.stone.innerHTML = '<span class="avita-ds__pending">Calculating…</span>';
+      if (el.facet) el.facet.textContent = state.carat + "ct · " + state.colour + " · " + state.clarity +
         " · " + (state.origin === "natural" ? "Natural" : "Lab");
-      el.props.innerHTML = "<strong>Your specification</strong><br>" +
+      if (el.props) el.props.innerHTML = "<strong>Your specification</strong><br>" +
         (state.origin === "natural" ? "Natural" : "Lab grown") + " " + shape + " cut · " +
         state.carat + " carat · colour " + state.colour + " · clarity " + state.clarity +
         "<br>Ring size " + (state.size || "—");
@@ -184,9 +184,9 @@
           if (reqCarat !== state.carat || reqColour !== state.colour || reqClarity !== state.clarity || reqOrigin !== state.origin) return;
           if (!data.ok) { el.cta.disabled = true; showMsg(data.reason || "Price unavailable for this combination.", "error"); return; }
           clearMsg();
-          el.base.textContent = data.baseFormatted;
-          el.stone.textContent = data.stoneFormatted;
-          el.total.textContent = data.totalFormatted;
+          if (el.base) el.base.textContent = data.baseFormatted;
+          if (el.stone) el.stone.textContent = data.stoneFormatted;
+          if (el.total) el.total.textContent = data.totalFormatted;
           el.cta.textContent = "Add to cart · " + data.totalFormatted;
         })
         .catch(function () { showMsg("Could not reach pricing. Please retry.", "error"); });
@@ -195,7 +195,7 @@
     // ---- step wiring ----------------------------------------------------
     function pickOrigin(origin) {
       state.origin = origin;
-      el.hintOrigin.textContent = (origin === "natural" ? "Natural" : "Lab") + " selected";
+      if (el.hintOrigin) el.hintOrigin.textContent = (origin === "natural" ? "Natural" : "Lab") + " selected";
       resetFromCarat();
       var cs = caratsFor(origin);
       el.carat.innerHTML = '<option value="">Select carat weight</option>';
@@ -285,7 +285,7 @@
       });
     }
     function renderThumbs(origin) {
-      if (!el.thumbs) { console.warn("[avita-ds] thumbs container [data-ds-thumbs] NOT found — liquid is stale, redeploy."); return; }
+      if (!el.thumbs) return; // compact block has no gallery — nothing to build
       if (thumbSource === "product") renderProductThumbs(); else renderCaratThumbs(origin);
       console.log("[avita-ds] renderThumbs", { mode: thumbSource, origin: origin,
         mappedCarats: Object.keys(serverImages).length, thumbsBuilt: el.thumbs.children.length,

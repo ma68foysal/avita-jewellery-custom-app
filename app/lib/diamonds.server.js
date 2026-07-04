@@ -389,3 +389,152 @@ export async function mintVariant(shop, admin, productGid, q) {
 
   return variantId;
 }
+
+// ---------------------------------------------------------------------------
+//  Product-per-order (current model): create a fresh, hidden-but-buyable product
+//  for this exact configuration and return its variant id for /cart/add.js.
+//
+//  Why a whole product instead of a variant?
+//   - Sidesteps Shopify's 3-option cap entirely — every spec rides as a
+//     line-item property, not a variant option, so we can carry 5+ attributes.
+//   - Each order gets its own clean product; no option-value juggling with the
+//     ring's real Metal/size options.
+//
+//  The product is created ACTIVE and PUBLISHED to the Online Store channel
+//  (Shopify refuses to sell unpublished products), but is added to no
+//  collection, so shoppers only reach it through the cart it was minted for.
+//  Inventory is oversell (CONTINUE) — made to order, always purchasable, and it
+//  needs no write_inventory scope (unlike inventoryItem.tracked=false).
+// ---------------------------------------------------------------------------
+let _onlineStorePubId = null; // best-effort warm-instance cache
+async function getOnlineStorePublicationId(admin) {
+  if (_onlineStorePubId) return _onlineStorePubId;
+  const r = await admin.graphql(
+    `#graphql
+    query Pubs { publications(first: 20) { nodes { id name } } }`,
+  );
+  const j = await r.json();
+  const nodes = j?.data?.publications?.nodes || [];
+  const os = nodes.find((n) => n.name === "Online Store") || nodes[0];
+  _onlineStorePubId = os?.id || null;
+  return _onlineStorePubId;
+}
+
+function shortId() {
+  // App server runtime (not the workflow sandbox) — Math.random is available.
+  return Math.random().toString(36).slice(2, 8).toUpperCase();
+}
+
+export async function mintProduct(shop, admin, productGid, q) {
+  // 1) Read the source ring for its title + image so the new product reads well
+  //    in the cart / order / packing slip.
+  const srcResp = await admin.graphql(
+    `#graphql
+    query Src($id: ID!) {
+      product(id: $id) { title featuredMedia { preview { image { url } } } }
+    }`,
+    { variables: { id: productGid } },
+  );
+  const srcJson = await srcResp.json();
+  const src = srcJson?.data?.product || {};
+  const srcTitle = src.title || "Custom diamond ring";
+  const imageUrl = src.featuredMedia?.preview?.image?.url || null;
+
+  const combo = `${q.origin}/${q.carat}ct/${q.colour}/${q.clarity}`;
+  const title = `${srcTitle} — ${combo} #${shortId()}`;
+
+  // 2) Create the product (ACTIVE).
+  const createResp = await admin.graphql(
+    `#graphql
+    mutation Create($product: ProductCreateInput!) {
+      productCreate(product: $product) {
+        product { id variants(first: 1) { nodes { id } } }
+        userErrors { field message }
+      }
+    }`,
+    {
+      variables: {
+        product: {
+          title,
+          status: "ACTIVE",
+          vendor: "Made to order",
+          productType: "Diamond ring",
+          tags: ["avita-diamond-selector", "made-to-order", `combo:${q.key}`],
+        },
+      },
+    },
+  );
+  const createJson = await createResp.json();
+  const cErrs = createJson?.data?.productCreate?.userErrors || [];
+  if (cErrs.length) throw new Error(`Product create failed: ${cErrs.map((e) => e.message).join("; ")}`);
+  const product = createJson?.data?.productCreate?.product;
+  const newProductGid = product?.id;
+  const defaultVariantGid = product?.variants?.nodes?.[0]?.id;
+  if (!newProductGid || !defaultVariantGid) throw new Error("Product create returned no ids");
+
+  // 3) Price the default variant + allow oversell (made to order → always buyable).
+  const upResp = await admin.graphql(
+    `#graphql
+    mutation Price($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
+      productVariantsBulkUpdate(productId: $productId, variants: $variants) {
+        userErrors { field message }
+      }
+    }`,
+    {
+      variables: {
+        productId: newProductGid,
+        variants: [{ id: defaultVariantGid, price: penceToPoundsString(q.totalPence), inventoryPolicy: "CONTINUE" }],
+      },
+    },
+  );
+  const upJson = await upResp.json();
+  const uErrs = upJson?.data?.productVariantsBulkUpdate?.userErrors || [];
+  if (uErrs.length) throw new Error(`Variant price failed: ${uErrs.map((e) => e.message).join("; ")}`);
+
+  // 4) Attach the ring image so the cart line shows the right photo (best-effort).
+  if (imageUrl) {
+    try {
+      await admin.graphql(
+        `#graphql
+        mutation Media($productId: ID!, $media: [CreateMediaInput!]!) {
+          productCreateMedia(productId: $productId, media: $media) {
+            mediaUserErrors { field message }
+          }
+        }`,
+        { variables: { productId: newProductGid, media: [{ originalSource: imageUrl, mediaContentType: "IMAGE" }] } },
+      );
+    } catch (e) { console.error("[mintProduct] media", e); }
+  }
+
+  // 5) Publish to the Online Store channel — required or it can't be checked out.
+  const pubId = await getOnlineStorePublicationId(admin);
+  if (pubId) {
+    const pubResp = await admin.graphql(
+      `#graphql
+      mutation Publish($id: ID!, $input: [PublicationInput!]!) {
+        publishablePublish(id: $id, input: $input) { userErrors { field message } }
+      }`,
+      { variables: { id: newProductGid, input: [{ publicationId: pubId }] } },
+    );
+    const pubJson = await pubResp.json();
+    const pErrs = pubJson?.data?.publishablePublish?.userErrors || [];
+    if (pErrs.length) console.error("[mintProduct] publish", pErrs);
+  }
+
+  const variantId = String(defaultVariantGid).split("/").pop();
+
+  // 6) Record it so a cleanup job can prune abandoned-cart orphans later.
+  //    Table is optional — never let bookkeeping block a checkout.
+  try {
+    await getSupabase().from("minted_products").insert({
+      shop,
+      product_id: String(newProductGid).split("/").pop(),
+      variant_id: variantId,
+      combo_key: q.key,
+      total_pence: q.totalPence,
+      created_at: new Date().toISOString(),
+    });
+  } catch (e) { /* ignore */ }
+
+  return variantId;
+}

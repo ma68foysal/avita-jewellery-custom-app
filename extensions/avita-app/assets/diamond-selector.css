@@ -386,3 +386,26 @@
     font-size: 32px;
   }
 }
+
+/* ---- Compact mode: single-panel form that replaces the native variant form -- */
+.avita-ds--compact .avita-ds__stage {
+  grid-template-columns: 1fr;      /* one column — no visual panel */
+  border: none;                    /* blend into the product page, not a card */
+  box-shadow: none;
+  border-radius: 0;
+  background: transparent;
+}
+.avita-ds--compact .avita-ds__selector {
+  padding: 0;                      /* sit flush like the theme's own form */
+}
+.avita-ds--compact .avita-ds__step {
+  margin-bottom: 18px;
+}
+.avita-ds--compact .avita-ds__summary {
+  margin-top: 8px;
+}
+@media (max-width: 820px) {
+  .avita-ds--compact .avita-ds__selector {
+    padding: 0;
+  }
+}

@@ -3,12 +3,11 @@
 {%- assign proxy_base = '/apps/' | append: block.settings.proxy_subpath -%}
 
 <div
-  class="avita-ds is-loading"
+  class="avita-ds avita-ds--compact is-loading"
   data-avita-ds
   data-product-id="{{ product.id }}"
   data-product-gid="gid://shopify/Product/{{ product.id }}"
   data-shape="{{ block.settings.shape | default: 'emerald' | downcase }}"
-  data-thumb-source="{{ block.settings.thumb_source | default: 'carat' }}"
   data-cart-type="{{ settings.cart_type | default: 'drawer' }}"
   data-proxy-base="{{ proxy_base }}"
   data-base-price="{{ product.price }}"
@@ -17,72 +16,37 @@
   data-featured-image="{% if product.featured_image %}{{ product.featured_image | image_url: width: 900 }}{% endif %}"
   {{ block.shopify_attributes }}
 >
-  <script type="application/json" data-ds-media>
-    [{%- for image in product.images -%}{"alt": {{ image.alt | default: '' | json }}, "src": {{ image | image_url: width: 900 | json }}}{%- unless forloop.last %},{% endunless -%}{%- endfor -%}]
-  </script>
   <div class="avita-ds__stage">
     <div class="avita-ds__loader" data-ds-loader aria-hidden="true"><span class="avita-ds__spinner"></span></div>
-    {%- if block.settings.show_visual -%}
-    <div class="avita-ds__visual">
-      <div class="avita-ds__main">
-        <div class="avita-ds__badge">{{ block.settings.eyebrow | escape }}</div>
-        <span class="avita-ds__zoom">Made to order</span>
-        <img data-ds-image class="avita-ds__photo" alt="{{ product.title | escape }}"
-          width="900" height="900" loading="lazy"
-          {% if product.featured_image %}src="{{ product.featured_image | image_url: width: 900 }}"{% else %}style="display:none"{% endif %}>
-        <svg data-ds-fallback width="200" height="230" viewBox="0 0 200 230" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"
-          {% if product.featured_image %}style="display:none"{% endif %}>
-          <ellipse cx="100" cy="176" rx="52" ry="44" stroke="#c9a86a" stroke-width="7" fill="none"/>
-          <ellipse cx="100" cy="176" rx="52" ry="44" stroke="#e8d3a4" stroke-width="2.4" fill="none"/>
-          <path d="M70 96 L74 120 M130 96 L126 120 M78 78 L82 108 M122 78 L118 108" stroke="#c9a86a" stroke-width="3" stroke-linecap="round"/>
-          <polygon points="70,52 130,52 142,80 100,116 58,80" fill="#f2f6f8" stroke="#b9c6cc" stroke-width="1.3"/>
-          <polygon points="70,52 130,52 122,66 78,66" fill="#e4edf1" stroke="#c3d0d6" stroke-width=".8"/>
-          <polygon points="78,66 122,66 130,80 70,80" fill="#eef4f6" stroke="#c3d0d6" stroke-width=".8"/>
-          <polygon points="70,80 130,80 100,110" fill="#dde9ee" stroke="#c3d0d6" stroke-width=".8"/>
-          <polygon points="70,52 78,66 70,80 58,80" fill="#e9f1f4" stroke="#c3d0d6" stroke-width=".8"/>
-          <polygon points="130,52 122,66 130,80 142,80" fill="#e9f1f4" stroke="#c3d0d6" stroke-width=".8"/>
-          <line x1="100" y1="52" x2="100" y2="110" stroke="#cdd9df" stroke-width=".6"/>
-        </svg>
-      </div>
-      <div class="avita-ds__thumbs" data-ds-thumbs></div>
-      <div class="avita-ds__facet-note">Every stone made to order
-        <span data-ds-facet>Select to preview specification</span>
-      </div>
-    </div>
-    {%- endif -%}
 
     <div class="avita-ds__selector">
-      <h2 class="avita-ds__title">{{ block.settings.heading | escape }}</h2>
-      <p class="avita-ds__subtitle">{{ block.settings.subheading | escape }}</p>
-      <div class="avita-ds__rule"></div>
-
       <div class="avita-ds__step" data-ds-step="origin">
-        <div class="avita-ds__step-label"><span class="avita-ds__num">01</span><span class="avita-ds__name">Diamond</span>
+        <div class="avita-ds__step-label"><span class="avita-ds__name">Diamond</span>
           <span class="avita-ds__hint" data-ds-hint-origin>Choose an origin</span></div>
         <div class="avita-ds__chips" data-ds-origin></div>
       </div>
 
       <div class="avita-ds__step is-locked" data-ds-step="carat">
-        <div class="avita-ds__step-label"><span class="avita-ds__num">02</span><span class="avita-ds__name">Carat</span>
+        <div class="avita-ds__step-label"><span class="avita-ds__name">Carat</span>
           <span class="avita-ds__hint">Weight</span></div>
         <select class="avita-ds__select" data-ds-carat><option value="">Select carat weight</option></select>
       </div>
 
       <div class="avita-ds__step is-locked" data-ds-step="colour">
-        <div class="avita-ds__step-label"><span class="avita-ds__num">03</span><span class="avita-ds__name">Colour</span>
+        <div class="avita-ds__step-label"><span class="avita-ds__name">Colour</span>
           <span class="avita-ds__hint">D is finest</span></div>
         <div class="avita-ds__chips" data-ds-colour></div>
       </div>
 
       <div class="avita-ds__step is-locked" data-ds-step="clarity">
-        <div class="avita-ds__step-label"><span class="avita-ds__num">04</span><span class="avita-ds__name">Clarity</span>
+        <div class="avita-ds__step-label"><span class="avita-ds__name">Clarity</span>
           <span class="avita-ds__hint">VVS1 is finest</span></div>
         <div class="avita-ds__chips" data-ds-clarity></div>
       </div>
 
       <div class="avita-ds__step is-locked" data-ds-step="size">
-        <div class="avita-ds__step-label"><span class="avita-ds__num">05</span><span class="avita-ds__name">Ring size</span>
-          <span class="avita-ds__hint">UK &middot; no price change</span></div>
+        <div class="avita-ds__step-label"><span class="avita-ds__name">Ring size</span>
+          <span class="avita-ds__hint">UK</span></div>
         <select class="avita-ds__select" data-ds-size></select>
       </div>
 
@@ -92,7 +56,6 @@
         <div class="avita-ds__price-line avita-ds__total"><span class="avita-ds__k">Total</span><span class="avita-ds__v" data-ds-total>{{ product.price | money }}</span></div>
         <button class="avita-ds__cta" data-ds-cta disabled>{{ block.settings.cta_text | escape }}</button>
         <div class="avita-ds__msg" data-ds-msg hidden></div>
-        <div class="avita-ds__props" data-ds-props><strong>Your specification</strong><br><span class="avita-ds__none">Nothing selected yet.</span></div>
       </div>
     </div>
   </div>
@@ -105,18 +68,10 @@
   "name": "Diamond Selector",
   "target": "section",
   "settings": [
-    { "type": "text", "id": "heading", "label": "Heading", "default": "The Emerald Solitaire" },
-    { "type": "text", "id": "subheading", "label": "Subheading", "default": "Configure your diamond. Price updates as you choose." },
-    { "type": "text", "id": "eyebrow", "label": "Visual eyebrow", "default": "Emerald Cut · 18k Yellow Gold" },
     { "type": "text", "id": "shape", "label": "Diamond shape (matches your CSV)", "default": "emerald" },
-    { "type": "select", "id": "thumb_source", "label": "Gallery thumbnails", "default": "carat", "options": [
-      { "value": "carat", "label": "Carat images (click a thumb to pick that carat)" },
-      { "value": "product", "label": "Product images (the ring's own photos)" }
-    ] },
     { "type": "text", "id": "base_label", "label": "Base price row label (blank = product title)", "default": "Ring base" },
     { "type": "text", "id": "cta_text", "label": "Button text", "default": "Add to cart" },
-    { "type": "text", "id": "proxy_subpath", "label": "App proxy subpath", "default": "diamond", "info": "Must match the app proxy subpath configured in the app (default: diamond)." },
-    { "type": "checkbox", "id": "show_visual", "label": "Show ring visual panel", "default": true }
+    { "type": "text", "id": "proxy_subpath", "label": "App proxy subpath", "default": "diamond", "info": "Must match the app proxy subpath configured in the app (default: diamond)." }
   ]
 }
 {% endschema %}

@@ -7,7 +7,7 @@ name = "avita-diamond-selector"
 
 [access_scopes]
 # Learn more at https://shopify.dev/docs/apps/tools/cli/configuration#access_scopes
-scopes = "read_products,write_products,read_files,write_metaobjects,write_metaobject_definitions"
+scopes = "read_products,write_products,read_files,read_publications,write_publications,write_metaobjects,write_metaobject_definitions"
 
 # Storefront selector calls the app through this proxy: /apps/diamond/* -> <app_url>/proxy/*
 # `shopify app dev` overrides `url` with the tunnel for the dev session automatically.

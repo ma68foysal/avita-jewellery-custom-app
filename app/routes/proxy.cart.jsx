@@ -1,5 +1,5 @@
 import { authenticate } from "../shopify.server";
-import { quote, mintVariant, ringSizes, formatGBP, getShopSettings } from "../lib/diamonds.server";
+import { quote, mintProduct, ringSizes, formatGBP, getShopSettings } from "../lib/diamonds.server";
 
 // POST /apps/diamond/cart
 // Body (JSON): { productId, shape, origin, carat, colour, clarity, size }
@@ -43,7 +43,8 @@ export const action = async ({ request }) => {
     });
     if (!q.ok) return Response.json(q, { status: 400 });
 
-    const variantId = await mintVariant(session.shop, admin, productGid, q);
+    // Product-per-order: mint a fresh hidden-but-buyable product at base+stone.
+    const variantId = await mintProduct(session.shop, admin, productGid, q);
 
     // Line-item properties travel to cart, checkout, order & packing slip.
     // Which fields are recorded is controlled on the Selector settings page.
