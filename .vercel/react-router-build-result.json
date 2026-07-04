@@ -1,0 +1,339 @@
+{
+  "buildManifest": {
+    "serverBundles": {
+      "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0": {
+        "id": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+        "file": "build/server/nodejs_eyJydW50aW1lIjoibm9kZWpzIn0/index.js",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    },
+    "routeIdToServerBundleId": {
+      "routes/webhooks.app.scopes_update": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/webhooks.app.uninstalled": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/proxy.options": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/proxy.price": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/auth.login": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/proxy.cart": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/auth.$": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/_index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/app.settings": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/app.images": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/app._index": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0",
+      "routes/app.rings": "nodejs_eyJydW50aW1lIjoibm9kZWpzIn0"
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "app/root.jsx",
+        "path": "",
+        "config": {}
+      },
+      "routes/webhooks.app.scopes_update": {
+        "id": "routes/webhooks.app.scopes_update",
+        "parentId": "root",
+        "file": "app/routes/webhooks.app.scopes_update.jsx",
+        "path": "webhooks/app/scopes_update",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/webhooks.app.uninstalled": {
+        "id": "routes/webhooks.app.uninstalled",
+        "parentId": "root",
+        "file": "app/routes/webhooks.app.uninstalled.jsx",
+        "path": "webhooks/app/uninstalled",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/proxy.options": {
+        "id": "routes/proxy.options",
+        "parentId": "root",
+        "file": "app/routes/proxy.options.jsx",
+        "path": "proxy/options",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/proxy.price": {
+        "id": "routes/proxy.price",
+        "parentId": "root",
+        "file": "app/routes/proxy.price.jsx",
+        "path": "proxy/price",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/auth.login": {
+        "id": "routes/auth.login",
+        "parentId": "root",
+        "file": "app/routes/auth.login/route.jsx",
+        "path": "auth/login",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/proxy.cart": {
+        "id": "routes/proxy.cart",
+        "parentId": "root",
+        "file": "app/routes/proxy.cart.jsx",
+        "path": "proxy/cart",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/auth.$": {
+        "id": "routes/auth.$",
+        "parentId": "root",
+        "file": "app/routes/auth.$.jsx",
+        "path": "auth/*",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/_index": {
+        "id": "routes/_index",
+        "parentId": "root",
+        "file": "app/routes/_index/route.jsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/app": {
+        "id": "routes/app",
+        "parentId": "root",
+        "file": "app/routes/app.jsx",
+        "path": "app",
+        "config": {}
+      },
+      "routes/app.settings": {
+        "id": "routes/app.settings",
+        "parentId": "routes/app",
+        "file": "app/routes/app.settings.jsx",
+        "path": "settings",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/app.images": {
+        "id": "routes/app.images",
+        "parentId": "routes/app",
+        "file": "app/routes/app.images.jsx",
+        "path": "images",
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/app._index": {
+        "id": "routes/app._index",
+        "parentId": "routes/app",
+        "file": "app/routes/app._index.jsx",
+        "index": true,
+        "config": {
+          "runtime": "nodejs"
+        }
+      },
+      "routes/app.rings": {
+        "id": "routes/app.rings",
+        "parentId": "routes/app",
+        "file": "app/routes/app.rings.jsx",
+        "path": "rings",
+        "config": {
+          "runtime": "nodejs"
+        }
+      }
+    }
+  },
+  "reactRouterConfig": {
+    "appDirectory": "D:/cracktab/Avita Jewellery/avita-diamond-selector/app",
+    "basename": "/",
+    "buildDirectory": "D:/cracktab/Avita Jewellery/avita-diamond-selector/build",
+    "future": {
+      "unstable_optimizeDeps": false,
+      "v8_passThroughRequests": false,
+      "v8_trailingSlashAwareDataRequests": false,
+      "unstable_previewServerPrerendering": false,
+      "v8_middleware": false,
+      "v8_splitRouteModules": false,
+      "v8_viteEnvironmentApi": false
+    },
+    "routes": {
+      "root": {
+        "id": "root",
+        "file": "root.jsx",
+        "path": ""
+      },
+      "routes/webhooks.app.scopes_update": {
+        "id": "routes/webhooks.app.scopes_update",
+        "parentId": "root",
+        "file": "routes/webhooks.app.scopes_update.jsx",
+        "path": "webhooks/app/scopes_update"
+      },
+      "routes/webhooks.app.uninstalled": {
+        "id": "routes/webhooks.app.uninstalled",
+        "parentId": "root",
+        "file": "routes/webhooks.app.uninstalled.jsx",
+        "path": "webhooks/app/uninstalled"
+      },
+      "routes/proxy.options": {
+        "id": "routes/proxy.options",
+        "parentId": "root",
+        "file": "routes/proxy.options.jsx",
+        "path": "proxy/options"
+      },
+      "routes/proxy.price": {
+        "id": "routes/proxy.price",
+        "parentId": "root",
+        "file": "routes/proxy.price.jsx",
+        "path": "proxy/price"
+      },
+      "routes/auth.login": {
+        "id": "routes/auth.login",
+        "parentId": "root",
+        "file": "routes/auth.login/route.jsx",
+        "path": "auth/login"
+      },
+      "routes/proxy.cart": {
+        "id": "routes/proxy.cart",
+        "parentId": "root",
+        "file": "routes/proxy.cart.jsx",
+        "path": "proxy/cart"
+      },
+      "routes/auth.$": {
+        "id": "routes/auth.$",
+        "parentId": "root",
+        "file": "routes/auth.$.jsx",
+        "path": "auth/*"
+      },
+      "routes/_index": {
+        "id": "routes/_index",
+        "parentId": "root",
+        "file": "routes/_index/route.jsx",
+        "index": true
+      },
+      "routes/app": {
+        "id": "routes/app",
+        "parentId": "root",
+        "file": "routes/app.jsx",
+        "path": "app"
+      },
+      "routes/app.settings": {
+        "id": "routes/app.settings",
+        "parentId": "routes/app",
+        "file": "routes/app.settings.jsx",
+        "path": "settings"
+      },
+      "routes/app.images": {
+        "id": "routes/app.images",
+        "parentId": "routes/app",
+        "file": "routes/app.images.jsx",
+        "path": "images"
+      },
+      "routes/app._index": {
+        "id": "routes/app._index",
+        "parentId": "routes/app",
+        "file": "routes/app._index.jsx",
+        "index": true
+      },
+      "routes/app.rings": {
+        "id": "routes/app.rings",
+        "parentId": "routes/app",
+        "file": "routes/app.rings.jsx",
+        "path": "rings"
+      }
+    },
+    "routeDiscovery": {
+      "mode": "lazy",
+      "manifestPath": "/__manifest"
+    },
+    "serverBuildFile": "index.js",
+    "serverModuleFormat": "esm",
+    "ssr": true,
+    "subResourceIntegrity": false,
+    "allowedActionOrigins": false,
+    "unstable_routeConfig": [
+      {
+        "id": "root",
+        "path": "",
+        "file": "root.jsx",
+        "children": [
+          {
+            "id": "routes/webhooks.app.scopes_update",
+            "file": "routes/webhooks.app.scopes_update.jsx",
+            "path": "webhooks/app/scopes_update"
+          },
+          {
+            "id": "routes/webhooks.app.uninstalled",
+            "file": "routes/webhooks.app.uninstalled.jsx",
+            "path": "webhooks/app/uninstalled"
+          },
+          {
+            "id": "routes/proxy.options",
+            "file": "routes/proxy.options.jsx",
+            "path": "proxy/options"
+          },
+          {
+            "id": "routes/proxy.price",
+            "file": "routes/proxy.price.jsx",
+            "path": "proxy/price"
+          },
+          {
+            "id": "routes/auth.login",
+            "file": "routes/auth.login/route.jsx",
+            "path": "auth/login"
+          },
+          {
+            "id": "routes/proxy.cart",
+            "file": "routes/proxy.cart.jsx",
+            "path": "proxy/cart"
+          },
+          {
+            "id": "routes/auth.$",
+            "file": "routes/auth.$.jsx",
+            "path": "auth/*"
+          },
+          {
+            "id": "routes/_index",
+            "file": "routes/_index/route.jsx",
+            "index": true
+          },
+          {
+            "id": "routes/app",
+            "file": "routes/app.jsx",
+            "path": "app",
+            "children": [
+              {
+                "id": "routes/app.settings",
+                "file": "routes/app.settings.jsx",
+                "path": "settings"
+              },
+              {
+                "id": "routes/app.images",
+                "file": "routes/app.images.jsx",
+                "path": "images"
+              },
+              {
+                "id": "routes/app._index",
+                "file": "routes/app._index.jsx",
+                "index": true
+              },
+              {
+                "id": "routes/app.rings",
+                "file": "routes/app.rings.jsx",
+                "path": "rings"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "viteConfig": {
+    "build": {
+      "assetsDir": "assets"
+    }
+  }
+}

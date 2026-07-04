@@ -1,7 +1,7 @@
 # Learn more about configuring your app at https://shopify.dev/docs/apps/tools/cli/configuration
 
 client_id = "2905ccf0d17b00edd420b1a21406b57a"
-application_url = "https://example.com"
+application_url = "https://avita-jewellery-custom-app.vercel.app"
 embedded = true
 name = "avita-diamond-selector"
 
@@ -12,7 +12,7 @@ scopes = "read_products,write_products,read_files,write_metaobjects,write_metaob
 # Storefront selector calls the app through this proxy: /apps/diamond/* -> <app_url>/proxy/*
 # `shopify app dev` overrides `url` with the tunnel for the dev session automatically.
 [app_proxy]
-url = "https://example.com/proxy"
+url = "https://avita-jewellery-custom-app.vercel.app/proxy"
 subpath = "diamond"
 prefix = "apps"
 
@@ -52,7 +52,11 @@ api_version = "2026-10"
   topics = [ "app/scopes_update" ]
 
 [auth]
-redirect_urls = [ "https://example.com/api/auth" ]
+redirect_urls = [
+  "https://avita-jewellery-custom-app.vercel.app/auth/callback",
+  "https://avita-jewellery-custom-app.vercel.app/auth/shopify/callback",
+  "https://avita-jewellery-custom-app.vercel.app/api/auth"
+]
 
 [build]
 automatically_update_urls_on_dev = true
