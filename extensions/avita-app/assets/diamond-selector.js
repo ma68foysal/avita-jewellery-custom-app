@@ -316,23 +316,42 @@
     function openThemeCart(sections) {
       // Refresh the header cart count if the theme exposes it.
       if (sections && sections["cart-icon-bubble"]) {
-        var bubble = document.getElementById("cart-icon-bubble");
-        if (bubble) bubble.innerHTML = sectionInner(sections["cart-icon-bubble"], "#cart-icon-bubble, .shopify-section");
+        var bubble = document.getElementById("cart-icon-bubble") ||
+          document.querySelector(".cart-count-bubble, [data-cart-count], .cart-link__bubble");
+        if (bubble) { try { bubble.innerHTML = sectionInner(sections["cart-icon-bubble"], "#cart-icon-bubble, .shopify-section"); } catch (e) { /* ignore */ } }
       }
-      // Notification style.
-      if (cartType === "notification") {
-        var note = document.querySelector("cart-notification");
-        if (note) {
-          if (sections && sections["cart-notification"]) note.innerHTML = sectionInner(sections["cart-notification"], "cart-notification");
-          if (typeof note.open === "function") { note.open(); return true; }
-        }
+
+      // Notification style (small popup — Dawn "notification" cart type).
+      var note = document.querySelector("cart-notification");
+      if (note && cartType === "notification") {
+        if (sections && sections["cart-notification"]) { try { note.innerHTML = sectionInner(sections["cart-notification"], "cart-notification"); } catch (e) { /* ignore */ } }
+        try { if (typeof note.open === "function") { note.open(); return true; } } catch (e) { /* ignore */ }
       }
-      // Drawer style (Dawn / Horizon and most themes).
-      var drawer = document.querySelector("cart-drawer");
+
+      // Drawer style — Dawn, Maestrooo (Impact/Craft), Horizon and most themes.
+      var drawer = document.querySelector("cart-drawer, #CartDrawer, .cart-drawer, [data-cart-drawer]");
       if (drawer) {
-        if (sections && sections["cart-drawer"]) { drawer.innerHTML = sectionInner(sections["cart-drawer"], "cart-drawer"); drawer.classList.remove("is-empty"); }
-        if (typeof drawer.open === "function") { drawer.open(); return true; }
-        drawer.classList.add("active", "animate"); document.body.classList.add("overflow-hidden"); return true;
+        // Refresh the drawer's contents from the section we requested with /cart/add.js.
+        if (sections && sections["cart-drawer"]) {
+          try { drawer.innerHTML = sectionInner(sections["cart-drawer"], "cart-drawer, #CartDrawer, .cart-drawer"); } catch (e) { /* ignore */ }
+        }
+        drawer.classList.remove("is-empty");
+
+        // Prefer the theme's own open method (runs focus trap / overlay / scroll lock).
+        var methods = ["open", "show", "showModal", "renderContents"];
+        for (var i = 0; i < methods.length; i++) {
+          if (typeof drawer[methods[i]] === "function") {
+            try { drawer[methods[i]](); return true; } catch (e) { /* ignore */ }
+          }
+        }
+        // Fallback to the attribute/class conventions themes use for CSS-driven drawers.
+        try { drawer.setAttribute("open", ""); } catch (e) { /* ignore */ }
+        drawer.removeAttribute("hidden");
+        drawer.classList.add("active", "animate", "is-open", "open", "drawer--open");
+        document.body.classList.add("overflow-hidden", "js-drawer-open", "cart-drawer-open");
+        // Nudge themes that open/refresh their drawer on a cart event.
+        try { document.dispatchEvent(new CustomEvent("cart:refresh", { bubbles: true })); } catch (e) { /* ignore */ }
+        return true;
       }
       return false;
     }
@@ -377,10 +396,10 @@
           });
         })
         .then(function (added) {
-          // Follow the theme's native cart behaviour.
-          if (cartType === "page") { window.location.href = "/cart"; return; }
+          // Always open the theme's cart drawer if one exists; only fall back to the
+          // cart page when the theme has no drawer/notification UI at all.
           var opened = openThemeCart(added && added.sections);
-          if (!opened) { window.location.href = "/cart"; return; } // no drawer on this theme
+          if (!opened) { window.location.href = "/cart"; return; }
           el.cta.disabled = false; el.cta.textContent = original; // ready for another add
         })
         .catch(function () {
