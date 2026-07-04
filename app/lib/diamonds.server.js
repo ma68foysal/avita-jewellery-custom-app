@@ -250,6 +250,38 @@ export async function quote(shop, admin, sel) {
 //  Made-to-order: inventory not tracked, oversell allowed, so it never blocks.
 //  Returns the numeric variant id for /cart/add.js.
 // ---------------------------------------------------------------------------
+// Make a variant's inventory item untracked so it's always available for sale
+// (made-to-order — there is no stock to count). Belt-and-suspenders because
+// productVariantsBulkCreate does not reliably apply inventoryItem.tracked.
+async function untrackVariantInventory(admin, variantGid, inventoryItemGid) {
+  try {
+    let invId = inventoryItemGid;
+    if (!invId) {
+      const r = await admin.graphql(
+        `#graphql
+        query VariantInventory($id: ID!) {
+          productVariant(id: $id) { inventoryItem { id } }
+        }`,
+        { variables: { id: variantGid } },
+      );
+      const j = await r.json();
+      invId = j?.data?.productVariant?.inventoryItem?.id;
+    }
+    if (!invId) return;
+    await admin.graphql(
+      `#graphql
+      mutation UntrackInventory($id: ID!, $input: InventoryItemInput!) {
+        inventoryItemUpdate(id: $id, input: $input) {
+          userErrors { field message }
+        }
+      }`,
+      { variables: { id: invId, input: { tracked: false } } },
+    );
+  } catch (err) {
+    console.error("[untrackVariantInventory]", err);
+  }
+}
+
 export async function mintVariant(shop, admin, productGid, q) {
   const supabase = getSupabase();
   const numericProductId = String(productGid).split("/").pop();
@@ -264,6 +296,9 @@ export async function mintVariant(shop, admin, productGid, q) {
     .maybeSingle();
 
   if (cached?.variant_id) {
+    // Self-heal: make sure a previously-minted variant is still purchasable
+    // (older ones may have been created while inventory tracking was on).
+    await untrackVariantInventory(admin, `gid://shopify/ProductVariant/${cached.variant_id}`);
     await supabase
       .from("dynamic_variants")
       .update({ last_used_at: new Date().toISOString() })
@@ -293,7 +328,7 @@ export async function mintVariant(shop, admin, productGid, q) {
     `#graphql
     mutation MintVariant($productId: ID!, $variants: [ProductVariantsBulkInput!]!) {
       productVariantsBulkCreate(productId: $productId, variants: $variants) {
-        productVariants { id }
+        productVariants { id inventoryItem { id } }
         userErrors { field message }
       }
     }`,
@@ -316,10 +351,13 @@ export async function mintVariant(shop, admin, productGid, q) {
   if (errs.length) {
     throw new Error(`Variant create failed: ${errs.map((e) => e.message).join("; ")}`);
   }
-  const variantGid =
-    createJson?.data?.productVariantsBulkCreate?.productVariants?.[0]?.id;
+  const created = createJson?.data?.productVariantsBulkCreate?.productVariants?.[0];
+  const variantGid = created?.id;
   if (!variantGid) throw new Error("Variant create returned no id");
   const variantId = String(variantGid).split("/").pop();
+
+  // Force the variant to be always purchasable (made-to-order, no stock).
+  await untrackVariantInventory(admin, variantGid, created?.inventoryItem?.id);
 
   // 4) Cache it for reuse.
   await supabase.from("dynamic_variants").upsert(
