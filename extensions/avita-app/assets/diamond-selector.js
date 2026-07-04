@@ -14,6 +14,7 @@
     var proxyBase = root.getAttribute("data-proxy-base");
     var shape = root.getAttribute("data-shape") || "emerald";
     var thumbSource = root.getAttribute("data-thumb-source") || "carat"; // "carat" | "product"
+    var cartType = root.getAttribute("data-cart-type") || "drawer"; // theme native: drawer | page | notification
 
     // Global show/hide from the "Diamond Selector" app embed (theme settings).
     var globalCfg = window.AvitaDiamondSelector;
@@ -304,6 +305,38 @@
 
     el.size.addEventListener("change", function () { state.size = this.value; refreshPrice(); });
 
+    // ---- open the theme's own cart UI (drawer / notification) -----------
+    function sectionInner(html, sel) {
+      try {
+        var doc = new DOMParser().parseFromString(html, "text/html");
+        var node = doc.querySelector(sel) || doc.body;
+        return node ? node.innerHTML : html;
+      } catch (e) { return html; }
+    }
+    function openThemeCart(sections) {
+      // Refresh the header cart count if the theme exposes it.
+      if (sections && sections["cart-icon-bubble"]) {
+        var bubble = document.getElementById("cart-icon-bubble");
+        if (bubble) bubble.innerHTML = sectionInner(sections["cart-icon-bubble"], "#cart-icon-bubble, .shopify-section");
+      }
+      // Notification style.
+      if (cartType === "notification") {
+        var note = document.querySelector("cart-notification");
+        if (note) {
+          if (sections && sections["cart-notification"]) note.innerHTML = sectionInner(sections["cart-notification"], "cart-notification");
+          if (typeof note.open === "function") { note.open(); return true; }
+        }
+      }
+      // Drawer style (Dawn / Horizon and most themes).
+      var drawer = document.querySelector("cart-drawer");
+      if (drawer) {
+        if (sections && sections["cart-drawer"]) { drawer.innerHTML = sectionInner(sections["cart-drawer"], "cart-drawer"); drawer.classList.remove("is-empty"); }
+        if (typeof drawer.open === "function") { drawer.open(); return true; }
+        drawer.classList.add("active", "animate"); document.body.classList.add("overflow-hidden"); return true;
+      }
+      return false;
+    }
+
     // ---- add to cart ----------------------------------------------------
     el.cta.setAttribute("data-default", el.cta.textContent);
     el.cta.addEventListener("click", function () {
@@ -329,15 +362,26 @@
         })
         .then(function (data) {
           if (!data.ok) throw new Error(data.reason || "cart_failed");
+          var sectionList = cartType === "notification" ? "cart-notification,cart-icon-bubble" : "cart-drawer,cart-icon-bubble";
           return fetch("/cart/add.js", {
             method: "POST",
             headers: { "Content-Type": "application/json", Accept: "application/json" },
-            body: JSON.stringify({ items: [{ id: Number(data.variantId), quantity: 1, properties: data.properties }] }),
+            body: JSON.stringify({
+              items: [{ id: Number(data.variantId), quantity: 1, properties: data.properties }],
+              sections: sectionList,
+              sections_url: window.location.pathname,
+            }),
+          }).then(function (r) {
+            if (!r.ok) return r.json().then(function (e) { throw new Error(e.description || "add_failed"); });
+            return r.json();
           });
         })
-        .then(function (r) {
-          if (!r.ok) return r.json().then(function (e) { throw new Error(e.description || "add_failed"); });
-          window.location.href = "/cart";
+        .then(function (added) {
+          // Follow the theme's native cart behaviour.
+          if (cartType === "page") { window.location.href = "/cart"; return; }
+          var opened = openThemeCart(added && added.sections);
+          if (!opened) { window.location.href = "/cart"; return; } // no drawer on this theme
+          el.cta.disabled = false; el.cta.textContent = original; // ready for another add
         })
         .catch(function () {
           showMsg("Sorry, we couldn't add this to your cart. Please try again in a moment.", "error");

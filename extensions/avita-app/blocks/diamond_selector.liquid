@@ -9,6 +9,7 @@
   data-product-gid="gid://shopify/Product/{{ product.id }}"
   data-shape="{{ block.settings.shape | default: 'emerald' | downcase }}"
   data-thumb-source="{{ block.settings.thumb_source | default: 'carat' }}"
+  data-cart-type="{{ settings.cart_type | default: 'drawer' }}"
   data-proxy-base="{{ proxy_base }}"
   data-base-price="{{ product.price }}"
   data-base-label="{{ block.settings.base_label | default: product.title | escape }}"
