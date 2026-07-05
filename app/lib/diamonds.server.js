@@ -400,11 +400,11 @@ export async function mintVariant(shop, admin, productGid, q) {
 //   - Each order gets its own clean product; no option-value juggling with the
 //     ring's real Metal/size options.
 //
-//  The product is created ACTIVE and PUBLISHED to the Online Store channel
-//  (Shopify refuses to sell unpublished products), but is added to no
-//  collection, so shoppers only reach it through the cart it was minted for.
-//  Inventory is oversell (CONTINUE) — made to order, always purchasable, and it
-//  needs no write_inventory scope (unlike inventoryItem.tracked=false).
+//  The product is created ACTIVE, published to the Online Store channel (so the
+//  cart/checkout link resolves), then flipped to UNLISTED (2025-10 status) —
+//  buyable via direct link/cart but hidden from store search, collections,
+//  recommendations and the sitemap. Inventory is oversell (CONTINUE) — made to
+//  order, always purchasable, and needs no write_inventory scope.
 // ---------------------------------------------------------------------------
 let _onlineStorePubId = null; // best-effort warm-instance cache
 async function getOnlineStorePublicationId(admin) {
@@ -422,7 +422,8 @@ async function getOnlineStorePublicationId(admin) {
 
 function shortId() {
   // App server runtime (not the workflow sandbox) — Math.random is available.
-  return Math.random().toString(36).slice(2, 8).toUpperCase();
+  // Short 4-char ref so the cart title stays tidy (e.g. "Pescia Round #A7X9").
+  return Math.random().toString(36).slice(2, 6).toUpperCase();
 }
 
 export async function mintProduct(shop, admin, productGid, q) {
@@ -440,10 +441,15 @@ export async function mintProduct(shop, admin, productGid, q) {
   const srcTitle = src.title || "Custom diamond ring";
   const imageUrl = src.featuredMedia?.preview?.image?.url || null;
 
-  const combo = `${q.origin}/${q.carat}ct/${q.colour}/${q.clarity}`;
-  const title = `${srcTitle} — ${combo} #${shortId()}`;
+  const ref = shortId();
+  // Ring name + a short unique ref (e.g. "Pescia Round #A7X9") — the ref keeps
+  // each made-to-order product distinct in admin. The full spec still rides on
+  // the order via line-item properties; the combo also goes to a tag below.
+  const title = `${srcTitle} #${ref}`;
 
-  // 2) Create the product (ACTIVE).
+  // 2) Create the product (ACTIVE). We flip it to UNLISTED in step 6 — the
+    //  UNLISTED enum is only accepted by productChangeStatus/productUpdate, not
+    //  reliably at create time, so we set it right after.
   const createResp = await admin.graphql(
     `#graphql
     mutation Create($product: ProductCreateInput!) {
@@ -459,7 +465,7 @@ export async function mintProduct(shop, admin, productGid, q) {
           status: "ACTIVE",
           vendor: "Made to order",
           productType: "Diamond ring",
-          tags: ["avita-diamond-selector", "made-to-order", `combo:${q.key}`],
+          tags: ["avita-diamond-selector", "made-to-order", `ref:${ref}`, `combo:${q.key}`],
         },
       },
     },
@@ -521,9 +527,28 @@ export async function mintProduct(shop, admin, productGid, q) {
     if (pErrs.length) console.error("[mintProduct] publish", pErrs);
   }
 
+  // 6) Flip to UNLISTED (2025-10): stays active + buyable via the cart/direct
+  //    link, but hidden from store search, collections, recommendations and the
+  //    sitemap. Best-effort — a failure here leaves it listed, never breaks the
+  //    checkout. Runs after publish so the product keeps its Online Store channel.
+  try {
+    const stResp = await admin.graphql(
+      `#graphql
+      mutation Unlist($productId: ID!, $status: ProductStatus!) {
+        productChangeStatus(productId: $productId, status: $status) {
+          userErrors { field message }
+        }
+      }`,
+      { variables: { productId: newProductGid, status: "UNLISTED" } },
+    );
+    const stJson = await stResp.json();
+    const stErrs = stJson?.data?.productChangeStatus?.userErrors || [];
+    if (stErrs.length) console.error("[mintProduct] unlist", stErrs);
+  } catch (e) { console.error("[mintProduct] unlist", e); }
+
   const variantId = String(defaultVariantGid).split("/").pop();
 
-  // 6) Record it so a cleanup job can prune abandoned-cart orphans later.
+  // 7) Record it so a cleanup job can prune abandoned-cart orphans later.
   //    Table is optional — never let bookkeeping block a checkout.
   try {
     await getSupabase().from("minted_products").insert({
