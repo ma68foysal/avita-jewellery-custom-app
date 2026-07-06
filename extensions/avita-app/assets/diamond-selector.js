@@ -483,9 +483,19 @@
       return false;
     }
 
-    // The minted product carries no image, so set the cart line's photo
-    // client-side from the URL the block already knows. No-op unless we can pin
-    // the exact line by its variant id (so we never touch the wrong line).
+    // Remember each minted line's image so we can repaint EVERY one of our lines
+    // whenever the drawer re-renders (a new add re-renders the whole drawer and
+    // would otherwise wipe earlier lines). sessionStorage survives reloads.
+    var LINE_IMG_KEY = "avita-line-imgs";
+    function readLineImgs() {
+      try { return JSON.parse(sessionStorage.getItem(LINE_IMG_KEY) || "{}") || {}; } catch (e) { return {}; }
+    }
+    function rememberLineImg(variantId, url) {
+      if (!variantId || !url) return;
+      try { var m = readLineImgs(); m[variantId] = url; sessionStorage.setItem(LINE_IMG_KEY, JSON.stringify(m)); } catch (e) { /* ignore */ }
+    }
+    // Set (or create) the photo for one cart line. No-op unless we can pin the
+    // exact line by its variant id, so we never touch the wrong line.
     function injectLineImage(variantId, url) {
       if (!variantId || !url) return;
       var scope = document.querySelector("cart-drawer, #CartDrawer, .cart-drawer, [data-cart-drawer], cart-notification") || document;
@@ -495,11 +505,31 @@
       );
       if (!hit) return;
       var line = (hit.closest && hit.closest("line-item, .line-item, .cart-item, .cart-drawer__item, li, tr, .cart__row")) || hit.parentNode;
-      var img = line && line.querySelector ? line.querySelector("img") : null;
-      if (!img) return;
-      img.removeAttribute("srcset");
-      img.removeAttribute("sizes");
-      img.setAttribute("src", url);
+      if (!line || !line.querySelector) return;
+      var img = line.querySelector("img");
+      if (img) {
+        img.removeAttribute("srcset");
+        img.removeAttribute("sizes");
+        img.setAttribute("src", url);
+        return;
+      }
+      // Theme rendered no <img> (product has no media) — drop one into the line's
+      // media slot so the line isn't blank.
+      var slot = line.querySelector(".line-item__media, .cart-item__media, .cart-item__image, .cart__image, [class*='__media'], [class*='__image']");
+      if (!slot) return;
+      var made = document.createElement("img");
+      made.src = url;
+      made.alt = "";
+      made.loading = "lazy";
+      made.style.width = "100%";
+      made.style.height = "100%";
+      made.style.objectFit = "cover";
+      if (slot.tagName === "IMG") { slot.replaceWith(made); } else { slot.appendChild(made); }
+    }
+    // Repaint every one of our lines currently in the drawer.
+    function paintLineImages() {
+      var m = readLineImgs();
+      Object.keys(m).forEach(function (vid) { injectLineImage(vid, m[vid]); });
     }
 
     // ---- add to cart ----------------------------------------------------
@@ -562,11 +592,12 @@
             }
           } catch (e) { /* ignore */ }
 
+          rememberLineImg(addedVariantId, lineImageUrl);
           var opened = openThemeCart(added && added.sections);
           if (!opened) { window.location.href = "/cart"; return; }
-          // Paint the line image now, and once more after the theme settles/re-renders.
-          injectLineImage(addedVariantId, lineImageUrl);
-          setTimeout(function () { injectLineImage(addedVariantId, lineImageUrl); }, 250);
+          // Paint ALL our lines now, and once more after the theme settles/re-renders.
+          paintLineImages();
+          setTimeout(paintLineImages, 250);
           // Keep the "Adding…" loader on the button until the drawer has slid open,
           // so it never disappears a beat before the cart is visible.
           setTimeout(function () {

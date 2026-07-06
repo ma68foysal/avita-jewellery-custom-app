@@ -432,13 +432,14 @@ export async function mintProduct(shop, admin, productGid, q) {
   const srcResp = await admin.graphql(
     `#graphql
     query Src($id: ID!) {
-      product(id: $id) { title }
+      product(id: $id) { title featuredMedia { preview { image { url } } } }
     }`,
     { variables: { id: productGid } },
   );
   const srcJson = await srcResp.json();
   const src = srcJson?.data?.product || {};
   const srcTitle = src.title || "Custom diamond ring";
+  const imageUrl = src.featuredMedia?.preview?.image?.url || null;
 
   const ref = shortId();
   // Ring name + a short unique ref (e.g. "Pescia Round #A7X9") — the ref keeps
@@ -495,6 +496,24 @@ export async function mintProduct(shop, admin, productGid, q) {
   const upJson = await upResp.json();
   const uErrs = upJson?.data?.productVariantsBulkUpdate?.userErrors || [];
   if (uErrs.length) throw new Error(`Variant price failed: ${uErrs.map((e) => e.message).join("; ")}`);
+
+  // 3b) Attach the ring image so it persists everywhere the product renders (cart
+  //     page, order, admin, re-opened drawer). Single call, NOT polled — Shopify
+  //     ingests it async (~1-2s); the storefront paints the drawer image instantly
+  //     client-side, so we don't block add-to-cart waiting for processing.
+  if (imageUrl) {
+    try {
+      await admin.graphql(
+        `#graphql
+        mutation Media($productId: ID!, $media: [CreateMediaInput!]!) {
+          productCreateMedia(productId: $productId, media: $media) {
+            mediaUserErrors { field message }
+          }
+        }`,
+        { variables: { productId: newProductGid, media: [{ originalSource: imageUrl, mediaContentType: "IMAGE" }] } },
+      );
+    } catch (e) { console.error("[mintProduct] media", e); }
+  }
 
   // 4) Publish to the Online Store channel — required or it can't be checked out.
   const pubId = await getOnlineStorePublicationId(admin);
