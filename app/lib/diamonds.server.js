@@ -432,14 +432,13 @@ export async function mintProduct(shop, admin, productGid, q) {
   const srcResp = await admin.graphql(
     `#graphql
     query Src($id: ID!) {
-      product(id: $id) { title featuredMedia { preview { image { url } } } }
+      product(id: $id) { title }
     }`,
     { variables: { id: productGid } },
   );
   const srcJson = await srcResp.json();
   const src = srcJson?.data?.product || {};
   const srcTitle = src.title || "Custom diamond ring";
-  const imageUrl = src.featuredMedia?.preview?.image?.url || null;
 
   const ref = shortId();
   // Ring name + a short unique ref (e.g. "Pescia Round #A7X9") — the ref keeps
@@ -497,22 +496,7 @@ export async function mintProduct(shop, admin, productGid, q) {
   const uErrs = upJson?.data?.productVariantsBulkUpdate?.userErrors || [];
   if (uErrs.length) throw new Error(`Variant price failed: ${uErrs.map((e) => e.message).join("; ")}`);
 
-  // 4) Attach the ring image so the cart line shows the right photo (best-effort).
-  if (imageUrl) {
-    try {
-      await admin.graphql(
-        `#graphql
-        mutation Media($productId: ID!, $media: [CreateMediaInput!]!) {
-          productCreateMedia(productId: $productId, media: $media) {
-            mediaUserErrors { field message }
-          }
-        }`,
-        { variables: { productId: newProductGid, media: [{ originalSource: imageUrl, mediaContentType: "IMAGE" }] } },
-      );
-    } catch (e) { console.error("[mintProduct] media", e); }
-  }
-
-  // 5) Publish to the Online Store channel — required or it can't be checked out.
+  // 4) Publish to the Online Store channel — required or it can't be checked out.
   const pubId = await getOnlineStorePublicationId(admin);
   if (pubId) {
     const pubResp = await admin.graphql(

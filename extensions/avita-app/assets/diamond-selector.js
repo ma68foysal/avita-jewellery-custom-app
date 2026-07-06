@@ -9,6 +9,50 @@
   function rank(map, v) { return v in map ? map[v] : 999; }
   function uniq(arr) { return Array.prototype.filter.call(arr, function (v, i) { return arr.indexOf(v) === i; }); }
 
+  // --- money: convert the app's GBP figures into the visitor's presentment
+  // currency (Shopify Markets converts by location) so the selector matches the
+  // product page + cart instead of flipping to £. Rate is derived live from the
+  // ring base, which the page knows in both currencies. Preview only — the cart
+  // and checkout remain authoritative (Shopify applies its own FX + rounding).
+  function moneyNum(str) {
+    // Pull a numeric value out of a formatted money string ("£1,314.00" -> 1314).
+    var s = String(str || "").replace(/[^\d.,]/g, "");
+    if (!s) return 0;
+    var d = Math.max(s.lastIndexOf("."), s.lastIndexOf(","));
+    var tail = d > -1 ? s.length - d - 1 : 0;
+    if (d > -1 && tail >= 1 && tail <= 2) {
+      return parseFloat(s.slice(0, d).replace(/[.,]/g, "") + "." + s.slice(d + 1).replace(/[.,]/g, "")) || 0;
+    }
+    return parseFloat(s.replace(/[.,]/g, "")) || 0;
+  }
+  function moneyParts(str) {
+    // Learn the visitor's money format from a Shopify-rendered string.
+    str = String(str || "");
+    var core = str.match(/\d[\d.,'’\s]*\d|\d/);
+    if (!core) return null;
+    var num = core[0];
+    var i = str.indexOf(num);
+    var dec = num.match(/[.,](\d{1,2})$/);
+    var decimals = dec ? dec[1].length : 0;
+    var decimalSep = dec ? num.charAt(num.length - decimals - 1) : ".";
+    return {
+      prefix: str.slice(0, i),
+      suffix: str.slice(i + num.length),
+      decimals: decimals,
+      decimalSep: decimalSep,
+      thousandsSep: decimalSep === "," ? "." : ",",
+    };
+  }
+  function fmtMoney(value, p) {
+    if (!p) return String(value);
+    var neg = value < 0;
+    value = Math.abs(Number(value) || 0);
+    var fixed = value.toFixed(p.decimals);
+    var bits = fixed.split(".");
+    var intPart = bits[0].replace(/\B(?=(\d{3})+(?!\d))/g, p.thousandsSep);
+    return (neg ? "-" : "") + p.prefix + intPart + (p.decimals ? p.decimalSep + bits[1] : "") + p.suffix;
+  }
+
   function initRoot(root) {
     var productGid = root.getAttribute("data-product-gid");
     var proxyBase = root.getAttribute("data-proxy-base");
@@ -50,6 +94,58 @@
       thumbs: q("[data-ds-thumbs]"),
     };
 
+    // Currency: the ring base is known in BOTH currencies at load — as presentment
+    // minor units (data-base-price, what the visitor sees) and, once a price comes
+    // back, in GBP (the app's currency). That ratio is the visitor's FX rate, and
+    // el.base's initial text teaches us how to format their currency.
+    var presentBaseMinor = parseInt(root.getAttribute("data-base-price") || "0", 10);
+    var moneyPat = el.base ? moneyParts(el.base.textContent) : null;
+    // Debug: is Shopify exposing a currency object on this theme?
+    console.log("[avita-ds] Shopify.currency:", (window.Shopify && window.Shopify.currency) || "(none)");
+
+    // Cache of the REAL FX rate, learned from an actual cart line (see add-to-cart).
+    // Keyed by the visitor's active currency so it survives reloads.
+    var CUR = (window.Shopify && window.Shopify.currency && window.Shopify.currency.active) || "cur";
+    var RATE_KEY = "avita-fxrate:" + CUR;
+    function cachedRate() {
+      try { var v = parseFloat(localStorage.getItem(RATE_KEY)); return isFinite(v) && v > 0 ? v : 0; } catch (e) { return 0; }
+    }
+    function cacheRate(v) {
+      try { if (isFinite(v) && v > 0) localStorage.setItem(RATE_KEY, String(v)); } catch (e) { /* ignore */ }
+    }
+
+    // Convert the app's GBP figures to the visitor's currency for display.
+    function toPresentment(data) {
+      var baseGBP = moneyNum(data.baseFormatted);
+      var stoneGBP = moneyNum(data.stoneFormatted);
+      var presentBase = presentBaseMinor / 100;
+      var derived = baseGBP > 0 ? presentBase / baseGBP : 0;
+      // No presentment info, or the visitor is already in the store's base
+      // currency (rate ~1) — show the app's exact strings, no conversion.
+      if (!moneyPat || !isFinite(derived) || derived <= 0 || Math.abs(derived - 1) < 0.01) {
+        return { base: data.baseFormatted, stone: data.stoneFormatted, total: data.totalFormatted };
+      }
+      // Prefer the rate LEARNED from a real cart line over the rate derived from
+      // the already-rounded base. Guard against garbage (>10% off).
+      var rate = derived;
+      var cr = cachedRate();
+      if (cr && Math.abs(cr - derived) / derived < 0.1) rate = cr;
+      // Every rate we can sample carries rounding noise (each source price is
+      // itself rounded to 100). Markets stores use a clean fixed rate, so snap
+      // large rates to 1 dp — this recovers e.g. 168.0 from 168.036/167.994 and
+      // makes the preview match the cart. Small rates (<10) keep full precision.
+      if (rate >= 10) rate = Math.round(rate * 10) / 10;
+      // Round to the currency's granularity so we don't show false precision.
+      // A whole-hundred base (e.g. BDT) means Shopify rounds to 100 as well.
+      var gran = presentBase >= 1000 && presentBase % 100 === 0 ? 100 : 1;
+      function r(v) { return gran > 1 ? Math.round(v / gran) * gran : Math.round(v); }
+      return {
+        base: fmtMoney(r(baseGBP * rate), moneyPat),
+        stone: fmtMoney(r(stoneGBP * rate), moneyPat),
+        total: fmtMoney(r((baseGBP + stoneGBP) * rate), moneyPat),
+      };
+    }
+
     // ---- image resolution: app mapping > CSV > alt-text > featured ------
     function caratNum(v) {
       var n = parseFloat(String(v).replace(/[^\d.]/g, ""));
@@ -65,8 +161,31 @@
       if (!carat) return featuredImage || null;
       return serverImages[carat] || altMatch(carat) || featuredImage || null;
     }
+    // Compact block has no image panel of its own — swap the THEME's main product
+    // image instead (best-effort; selectors vary by theme). Set both src and
+    // srcset so the browser doesn't keep showing the responsive original.
+    function swapThemeMedia(url) {
+      if (!url) return;
+      var sels = [
+        ".product-gallery__media img",   // Maestrooo scroll-carousel (this theme)
+        "media-gallery img", "product-media img", ".product-media img",
+        ".product__media img", "[data-product-media-wrapper] img",
+        ".product__media-item img", ".product-single__photo img",
+      ];
+      var img = null;
+      for (var i = 0; i < sels.length && !img; i++) img = document.querySelector(sels[i]);
+      if (!img) return;
+      // Drop the responsive srcset/sizes so the browser shows exactly our URL.
+      img.removeAttribute("srcset");
+      img.removeAttribute("sizes");
+      img.removeAttribute("data-srcset");
+      img.setAttribute("src", url);
+      // If it's a scroll carousel, snap back to the (now-swapped) first slide.
+      var car = document.querySelector(".product-gallery__carousel, scroll-carousel, .product-gallery__image-list .scroll-area");
+      if (car) { try { car.scrollTo({ left: 0, behavior: "smooth" }); } catch (e) { car.scrollLeft = 0; } }
+    }
     function setImage(url) {
-      if (!el.image) return;
+      if (!el.image) { swapThemeMedia(url); return; }
       if (url) {
         el.image.classList.add("is-swapping");
         var pre = new Image();
@@ -184,10 +303,11 @@
           if (reqCarat !== state.carat || reqColour !== state.colour || reqClarity !== state.clarity || reqOrigin !== state.origin) return;
           if (!data.ok) { el.cta.disabled = true; showMsg(data.reason || "Price unavailable for this combination.", "error"); return; }
           clearMsg();
-          if (el.base) el.base.textContent = data.baseFormatted;
-          if (el.stone) el.stone.textContent = data.stoneFormatted;
-          if (el.total) el.total.textContent = data.totalFormatted;
-          el.cta.textContent = "Add to cart · " + data.totalFormatted;
+          var m = toPresentment(data); // show the visitor's currency, not raw GBP
+          if (el.base) el.base.textContent = m.base;
+          if (el.stone) el.stone.textContent = m.stone;
+          if (el.total) el.total.textContent = m.total;
+          el.cta.textContent = "Add to cart · " + m.total;
         })
         .catch(function () { showMsg("Could not reach pricing. Please retry.", "error"); });
     }
@@ -331,9 +451,16 @@
       // Drawer style — Dawn, Maestrooo (Impact/Craft), Horizon and most themes.
       var drawer = document.querySelector("cart-drawer, #CartDrawer, .cart-drawer, [data-cart-drawer]");
       if (drawer) {
-        // Refresh the drawer's contents from the section we requested with /cart/add.js.
+        // Replace the WHOLE drawer element with the freshly-rendered one. Injecting
+        // innerHTML strips the element's own slot structure (header/footer) and
+        // leaves an empty gap at the top; swapping the element keeps it intact.
         if (sections && sections["cart-drawer"]) {
-          try { drawer.innerHTML = sectionInner(sections["cart-drawer"], "cart-drawer, #CartDrawer, .cart-drawer"); } catch (e) { /* ignore */ }
+          try {
+            var doc2 = new DOMParser().parseFromString(sections["cart-drawer"], "text/html");
+            var fresh = doc2.querySelector("cart-drawer, #CartDrawer, .cart-drawer");
+            if (fresh && drawer.parentNode) { drawer.replaceWith(fresh); drawer = fresh; }
+            else if (!fresh) { drawer.innerHTML = sectionInner(sections["cart-drawer"], "cart-drawer, #CartDrawer, .cart-drawer"); }
+          } catch (e) { /* ignore */ }
         }
         drawer.classList.remove("is-empty");
 
@@ -356,6 +483,25 @@
       return false;
     }
 
+    // The minted product carries no image, so set the cart line's photo
+    // client-side from the URL the block already knows. No-op unless we can pin
+    // the exact line by its variant id (so we never touch the wrong line).
+    function injectLineImage(variantId, url) {
+      if (!variantId || !url) return;
+      var scope = document.querySelector("cart-drawer, #CartDrawer, .cart-drawer, [data-cart-drawer], cart-notification") || document;
+      var hit = scope.querySelector(
+        'a[href*="variant=' + variantId + '"], [data-line-key^="' + variantId + ':"], ' +
+        '[data-variant-id="' + variantId + '"], [data-cart-item-variant-id="' + variantId + '"]',
+      );
+      if (!hit) return;
+      var line = (hit.closest && hit.closest("line-item, .line-item, .cart-item, .cart-drawer__item, li, tr, .cart__row")) || hit.parentNode;
+      var img = line && line.querySelector ? line.querySelector("img") : null;
+      if (!img) return;
+      img.removeAttribute("srcset");
+      img.removeAttribute("sizes");
+      img.setAttribute("src", url);
+    }
+
     // ---- add to cart ----------------------------------------------------
     el.cta.setAttribute("data-default", el.cta.textContent);
     el.cta.addEventListener("click", function () {
@@ -364,6 +510,9 @@
       el.cta.disabled = true;
       var original = el.cta.textContent;
       el.cta.textContent = "Adding…";
+      var lineImageUrl = resolveImage(state.carat) || featuredImage || null;
+      var addedVariantId = null;
+      var addedTotalGBP = 0;
 
       fetch(proxyBase + "/cart", {
         method: "POST",
@@ -381,6 +530,8 @@
         })
         .then(function (data) {
           if (!data.ok) throw new Error(data.reason || "cart_failed");
+          addedVariantId = data.variantId;
+          addedTotalGBP = moneyNum(data.totalFormatted); // GBP total for the FX-rate learning below
           var sectionList = cartType === "notification" ? "cart-notification,cart-icon-bubble" : "cart-drawer,cart-icon-bubble";
           return fetch("/cart/add.js", {
             method: "POST",
@@ -398,9 +549,29 @@
         .then(function (added) {
           // Always open the theme's cart drawer if one exists; only fall back to the
           // cart page when the theme has no drawer/notification UI at all.
+          // Learn the REAL FX rate from the cart line: it's Shopify's exact
+          // converted price for a variant whose GBP total we know. Cache it so the
+          // next price preview matches the cart precisely (no ~100 rounding gap).
+          try {
+            var ln = added && (added.items ? added.items[0] : added);
+            var presCents = ln && (ln.final_line_price || ln.line_price || ln.price);
+            if (presCents && addedTotalGBP > 0) {
+              var learned = presCents / 100 / addedTotalGBP;
+              cacheRate(learned);
+              console.log("[avita-ds] learned FX rate:", learned, "→ cached for", CUR);
+            }
+          } catch (e) { /* ignore */ }
+
           var opened = openThemeCart(added && added.sections);
           if (!opened) { window.location.href = "/cart"; return; }
-          el.cta.disabled = false; el.cta.textContent = original; // ready for another add
+          // Paint the line image now, and once more after the theme settles/re-renders.
+          injectLineImage(addedVariantId, lineImageUrl);
+          setTimeout(function () { injectLineImage(addedVariantId, lineImageUrl); }, 250);
+          // Keep the "Adding…" loader on the button until the drawer has slid open,
+          // so it never disappears a beat before the cart is visible.
+          setTimeout(function () {
+            el.cta.disabled = false; el.cta.textContent = original; // ready for another add
+          }, 450);
         })
         .catch(function () {
           showMsg("Sorry, we couldn't add this to your cart. Please try again in a moment.", "error");
