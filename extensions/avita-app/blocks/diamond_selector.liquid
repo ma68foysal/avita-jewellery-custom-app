@@ -1,3 +1,4 @@
+{%- if product.tags contains 'avita-diamond-selector' -%}
 {{ 'diamond-selector.css' | asset_url | stylesheet_tag }}
 
 {%- assign proxy_base = '/apps/' | append: block.settings.proxy_subpath -%}
@@ -85,6 +86,7 @@
 </div>
 
 <script src="{{ 'diamond-selector.js' | asset_url }}" defer></script>
+{%- endif -%}
 
 {% schema %}
 {
