@@ -1,6 +1,10 @@
 {{ 'diamond-selector.css' | asset_url | stylesheet_tag }}
 
 {%- assign proxy_base = '/apps/' | append: block.settings.proxy_subpath -%}
+{%- assign sg_page = pages[block.settings.size_guide_page] -%}
+{%- assign sg_label = block.settings.size_guide_label | default: 'Size Guide' -%}
+{%- assign sg_enabled = false -%}
+{%- if block.settings.size_guide_page != blank and sg_page != empty -%}{%- assign sg_enabled = true -%}{%- endif -%}
 
 <div
   class="avita-ds avita-ds--compact is-loading"
@@ -46,7 +50,15 @@
 
       <div class="avita-ds__step is-locked" data-ds-step="size">
         <div class="avita-ds__step-label"><span class="avita-ds__name">Ring size</span>
-          <span class="avita-ds__hint">UK</span></div>
+          <span class="avita-ds__hint">UK</span>
+          {%- if sg_enabled -%}
+            {%- if block.settings.size_guide_mode == 'modal' -%}
+              <a class="avita-ds__sizeguide" href="{{ sg_page.url }}" target="_blank" rel="noopener" data-ds-sizeguide>{{ sg_label | escape }}</a>
+            {%- else -%}
+              <a class="avita-ds__sizeguide" href="{{ sg_page.url }}" target="_blank" rel="noopener">{{ sg_label | escape }}</a>
+            {%- endif -%}
+          {%- endif -%}
+        </div>
         <select class="avita-ds__select" data-ds-size></select>
       </div>
 
@@ -59,6 +71,17 @@
       </div>
     </div>
   </div>
+
+  {%- if sg_enabled and block.settings.size_guide_mode == 'modal' -%}
+    <div class="avita-ds__sg-modal" data-ds-sg-modal hidden>
+      <div class="avita-ds__sg-backdrop" data-ds-sg-close></div>
+      <div class="avita-ds__sg-panel" role="dialog" aria-modal="true" aria-label="{{ sg_label | escape }}">
+        <button type="button" class="avita-ds__sg-close" data-ds-sg-close aria-label="Close">&times;</button>
+        <div class="avita-ds__sg-title">{{ sg_page.title | default: sg_label | escape }}</div>
+        <div class="avita-ds__sg-body rte">{{ sg_page.content }}</div>
+      </div>
+    </div>
+  {%- endif -%}
 </div>
 
 <script src="{{ 'diamond-selector.js' | asset_url }}" defer></script>
@@ -69,9 +92,22 @@
   "target": "section",
   "settings": [
     { "type": "text", "id": "shape", "label": "Diamond shape (matches your CSV)", "default": "emerald" },
-    { "type": "text", "id": "base_label", "label": "Base price row label (blank = product title)", "default": "Ring base" },
+    { "type": "text", "id": "base_label", "label": "Base price row label (blank = product title)", "default": "Ring Price" },
     { "type": "text", "id": "cta_text", "label": "Button text", "default": "Add to cart" },
-    { "type": "text", "id": "proxy_subpath", "label": "App proxy subpath", "default": "diamond", "info": "Must match the app proxy subpath configured in the app (default: diamond)." }
+    { "type": "text", "id": "proxy_subpath", "label": "App proxy subpath", "default": "diamond", "info": "Must match the app proxy subpath configured in the app (default: diamond)." },
+    { "type": "header", "content": "Size guide" },
+    { "type": "page", "id": "size_guide_page", "label": "Size guide page", "info": "Choose a page to show as the ring-size size guide. Leave blank to hide the link." },
+    { "type": "text", "id": "size_guide_label", "label": "Size guide link text", "default": "Size Guide" },
+    {
+      "type": "select",
+      "id": "size_guide_mode",
+      "label": "How to open the size guide",
+      "default": "new_tab",
+      "options": [
+        { "value": "new_tab", "label": "Open the page in a new tab" },
+        { "value": "modal", "label": "Open as a popup (modal) on the same page" }
+      ]
+    }
   ]
 }
 {% endschema %}

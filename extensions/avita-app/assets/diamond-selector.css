@@ -238,6 +238,70 @@
   font-style: italic;
   font-family: var(--ds-serif);
 }
+/* Size guide link sits to the right of the Ring size row and stays
+   clickable/legible even while the step is still locked. */
+.avita-ds__sizeguide {
+  font-family: var(--ds-sans);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  color: var(--ds-gold, #8a6d3b);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+  pointer-events: auto;
+  white-space: nowrap;
+}
+.avita-ds__sizeguide:hover { opacity: 0.75; }
+.avita-ds__step .avita-ds__hint + .avita-ds__sizeguide { margin-left: 10px; }
+
+/* Size guide modal (only rendered when "modal" mode is selected) */
+.avita-ds__sg-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+.avita-ds__sg-modal[hidden] { display: none; }
+.avita-ds__sg-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(20, 20, 20, 0.55);
+}
+.avita-ds__sg-panel {
+  position: relative;
+  background: #fff;
+  max-width: 640px;
+  width: 100%;
+  max-height: 85vh;
+  overflow: auto;
+  padding: 34px 30px 30px;
+  border-radius: 2px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25);
+}
+.avita-ds__sg-close {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  background: none;
+  border: none;
+  font-size: 26px;
+  line-height: 1;
+  color: var(--ds-graphite, #555);
+  cursor: pointer;
+  padding: 4px 8px;
+}
+.avita-ds__sg-close:hover { color: #000; }
+.avita-ds__sg-title {
+  font-family: var(--ds-serif);
+  font-size: 20px;
+  margin: 0 0 16px;
+  padding-right: 24px;
+}
+.avita-ds__sg-body { font-size: 14px; line-height: 1.6; }
+.avita-ds__sg-body img { max-width: 100%; height: auto; }
 .avita-ds__chips {
   display: flex;
   flex-wrap: wrap;

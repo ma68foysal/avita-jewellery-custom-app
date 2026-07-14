@@ -667,6 +667,30 @@
 
     enableThumbDrag();
     renderThumbs(null);
+
+    // Size guide: intercept the link and open the in-page modal when the
+    // block is configured in "modal" mode. Falls back to the link's default
+    // new-tab behaviour if the modal markup is not present.
+    (function wireSizeGuide() {
+      var link = root.querySelector("[data-ds-sizeguide]");
+      var modal = root.querySelector("[data-ds-sg-modal]");
+      if (!link || !modal) return;
+      function open(e) {
+        if (e) e.preventDefault();
+        modal.hidden = false;
+        document.addEventListener("keydown", onKey);
+      }
+      function close() {
+        modal.hidden = true;
+        document.removeEventListener("keydown", onKey);
+      }
+      function onKey(e) { if (e.key === "Escape" || e.keyCode === 27) close(); }
+      link.addEventListener("click", open);
+      Array.prototype.forEach.call(modal.querySelectorAll("[data-ds-sg-close]"), function (b) {
+        b.addEventListener("click", close);
+      });
+    })();
+
     boot();
   }
 
